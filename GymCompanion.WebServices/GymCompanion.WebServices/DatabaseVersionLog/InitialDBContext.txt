@@ -1,0 +1,72 @@
+﻿IF NOT EXISTS(SELECT name FROM sysobjects WHERE type = 'U' AND name = 'Exercises')
+CREATE TABLE [dbo].[Exercises](
+[Id] [int] NOT NULL IDENTITY,
+[Name] [varchar](50) NOT NULL,
+[BodyPart] [varchar](50),
+[Description] [varchar](max),
+CONSTRAINT [PK_Exercises] 
+PRIMARY KEY CLUSTERED
+([Id] ASC) ON [PRIMARY])
+
+ALTER TABLE Exercises ADD CONSTRAINT Exercise_Name_Unique UNIQUE(Name);
+ALTER TABLE Exercises ALTER COLUMN BodyPart [int];
+ALTER TABLE Exercises ADD FOREIGN KEY (BodyPart) REFERENCES BodyParts(Id)
+USE GymCompanion;
+GO
+EXEC sp_RENAME '[dbo].[Exercises].[BodyPart]', 'BodyPartId', 'COLUMN'
+GO
+ALTER TABLE Exercises ALTER COLUMN BodyPartId [int] NOT NULL;
+
+
+IF NOT EXISTS(SELECT name FROM sysobjects WHERE type = 'U' AND name = 'BodyParts')
+CREATE TABLE [dbo].[Exercises](
+[Id] [int] NOT NULL,
+[Name] [varchar](50) NOT NULL,
+CONSTRAINT [PK_BodyParts] 
+PRIMARY KEY CLUSTERED
+([Id] ASC) ON [PRIMARY])
+
+ALTER TABLE BodyParts ADD CONSTRAINT BodyPart_Name_Unique UNIQUE (Name);
+
+
+IF NOT EXISTS(SELECT name FROM sysobjects WHERE type = 'U' AND name = 'Workouts')
+CREATE TABLE [dbo].[Workouts](
+[Id] [int] NOT NULL,
+[Name] [varchar](50) NOT NULL,
+[User] [varchar](50) NOT NULL,
+[Time] [int] NOT NULL,
+[Date] [Datetime] NOT NULL,
+[Exercises] [int] FOREIGN KEY REFERENCES [dbo].[Exercises](Id),
+CONSTRAINT [PK_Workouts] 
+PRIMARY KEY CLUSTERED
+([Id] ASC) ON [PRIMARY])
+
+ALTER TABLE Workouts ALTER COLUMN [User] [int];
+ALTER TABLE Workouts ALTER COLUMN [Time] [float];
+
+USE GymCompanion;
+GO
+EXEC sp_RENAME '[dbo].[Workouts].[User]', 'UserId', 'COLUMN'
+GO
+ALTER TABLE Workouts ALTER COLUMN UserId [int] NOT NULL;
+ALTER TABLE Workouts ALTER COLUMN Time [float] NOT NULL;
+
+
+IF NOT EXISTS(SELECT name FROM sysobjects WHERE type = 'U' AND name = 'Users')
+CREATE TABLE [dbo].[Users](
+[Id] [int] NOT NULL IDENTITY,
+[Email] [varchar](50) NOT NULL,
+[Username] [varchar](50) NOT NULL,
+[Password] [varchar](50) NOT NULL,
+[Firstname] [varchar](50) NOT NULL,
+[Lastname] [varchar](50) NOT NULL,
+[Country] [varchar](50) NOT NULL,
+[Birthday] [Datetime] NOT NULL,
+[RegistrationDate] [Datetime] NOT NULL,
+[Workouts] [int] FOREIGN KEY REFERENCES [dbo].[Workouts](Id),
+CONSTRAINT [PK_Users] 
+PRIMARY KEY CLUSTERED
+([Id] ASC) ON [PRIMARY])
+
+ALTER TABLE Users ADD CONSTRAINT User_Username_Unique UNIQUE (Username);
+ALTER TABLE Users ADD CONSTRAINT User_Email_Unique UNIQUE (Email);
