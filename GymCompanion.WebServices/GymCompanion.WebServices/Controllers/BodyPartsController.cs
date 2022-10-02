@@ -1,5 +1,6 @@
 ﻿using GymCompanion.Data;
 using GymCompanion.Data.Models.BodyParts;
+using GymCompanion.WebServices.DAL;
 using GymCompanion.WebServices.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -18,11 +19,11 @@ namespace GymCompanion.WebServices.Controllers
 
         [Route("GetBodyPartInfo")]
         [HttpGet]
-        public async Task<ActionResult> GetBodyPartInfo(string name)
+        public async Task<ActionResult> GetBodyPartInfo(int bodyPartId)
         {
             try
             {
-                BodyPart bodyPart = await _context.BodyParts.FirstOrDefaultAsync(x => x.Name == name);
+                BodyPart bodyPart = await _context.BodyParts.FirstOrDefaultAsync(x => x.Id == bodyPartId);
 
                 if (bodyPart != null)
                 {
@@ -56,6 +57,7 @@ namespace GymCompanion.WebServices.Controllers
                     foreach (BodyPart bodyPart in bodyParts)
                         model.BodyParts.Add(new GetBodyPartInfoModel() { Name = bodyPart.Name});
 
+                    bodyParts = bodyParts.OrderBy(x => x.Id).ToList();
                     return Ok(bodyParts);
                 }
                 else
@@ -98,11 +100,11 @@ namespace GymCompanion.WebServices.Controllers
 
         [Route("DeleteBodyPart")]
         [HttpDelete]
-        public async Task<ActionResult> DeleteBodyPart(string name)
+        public async Task<ActionResult> DeleteBodyPart(int bodyPartId)
         {
             try
             {
-                BodyPart bodyPartToDelete = await _context.BodyParts.FirstOrDefaultAsync(x => x.Name == name);
+                BodyPart bodyPartToDelete = await _context.BodyParts.FirstOrDefaultAsync(x => x.Id == bodyPartId);
 
                 if (bodyPartToDelete == null)
                     return StatusCode(409, Numerators.ApiResponseMessages.BodyPartNotFound);
@@ -122,12 +124,12 @@ namespace GymCompanion.WebServices.Controllers
 
         [Route("UpdateBodyPart")]
         [HttpPost]
-        public async Task<ActionResult> UpdateBodyPart(string oldName, string newName)
+        public async Task<ActionResult> UpdateBodyPart(int bodyPartId, string newName)
         {
             try
             {
-                BodyPart bodyPartToUdpate = await _context.BodyParts.FirstOrDefaultAsync(x => x.Name == oldName);
-                bool nameIsUsed = await _context.BodyParts.CountAsync(x => x.Name == newName) != 0;
+                BodyPart bodyPartToUdpate = await _context.BodyParts.FirstOrDefaultAsync(x => x.Id == bodyPartId);
+                bool nameIsUsed = await _context.BodyParts.CountAsync(x => x.Name == newName) != 0 && bodyPartToUdpate.Name != newName;
 
                 if (bodyPartToUdpate == null)
                     return StatusCode(409, Numerators.ApiResponseMessages.BodyPartNotFound);

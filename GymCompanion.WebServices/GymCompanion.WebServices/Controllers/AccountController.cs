@@ -1,5 +1,6 @@
 ﻿using GymCompanion.Data;
 using GymCompanion.Data.Models.Account;
+using GymCompanion.WebServices.DAL;
 using GymCompanion.WebServices.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

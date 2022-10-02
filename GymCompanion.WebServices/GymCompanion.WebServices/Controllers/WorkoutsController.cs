@@ -1,5 +1,6 @@
 ﻿using GymCompanion.Data;
 using GymCompanion.Data.Models.Workouts;
+using GymCompanion.WebServices.DAL;
 using GymCompanion.WebServices.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -18,29 +19,44 @@ namespace GymCompanion.WebServices.Controllers
 
         [Route("GetUserWorkouts")]
         [HttpGet]
-        public async Task<ActionResult> GetUserWorkouts(User user, string workoutName)
+        public async Task<ActionResult> GetUserWorkouts(int userId)
         {
             try
             {
-                List<Workout> userWorkouts = await _context.Workouts.Where(x => x.UserId == user.Id).ToListAsync();
+                User user = await _context.Users.FirstOrDefaultAsync(x => x.Id == userId);
 
-                List<GetUserWorkoutsModel> model = new List<GetUserWorkoutsModel>();
-
-                foreach (Workout workout in userWorkouts)
+                if (user == null)
+                    return StatusCode(409, Numerators.ApiResponseMessages.UserNotFound);
+                else
                 {
-                    GetUserWorkoutsModel tempWorkout = new GetUserWorkoutsModel()
+                    List<GetUserWorkoutsModel> model = new();
+
+                    List<Workout> userWorkouts = await _context.Workouts.Where(x => x.UserId == user.Id).ToListAsync();
+                    foreach (Workout workout in userWorkouts)
                     {
-                        Id = workout.Id,
-                        Name = workout.Name,
-                        UserId = workout.Id,
-                        Time = (double)workout.Time,
-                        Date = workout.Date,
-                    };
+                        List<Exercise> listOfExercises = await _context.Exercises.Where(e => e.Workouts.Contains(workout)).ToListAsync();
+                        List<string> listOfExercisesId = new();
+                        foreach (Exercise exercise in listOfExercises)
+                            listOfExercisesId.Add(exercise.Id.ToString());
 
-                    //TODO pass exercises
-                }
+                        string exercises = String.Join(",", listOfExercisesId);
 
-                return Ok(model);
+
+                        GetUserWorkoutsModel tempWorkout = new()
+                        {
+                            Id = workout.Id,
+                            Name = workout.Name,
+                            UserId = workout.Id,
+                            Time = (double)workout.Time,
+                            Date = workout.Date,
+                            Exercises = exercises
+                        };
+
+                        model.Add(tempWorkout);
+                    }
+
+                    return Ok(model);
+                }   
             }
             catch (Exception exception)
             {
@@ -50,25 +66,37 @@ namespace GymCompanion.WebServices.Controllers
 
         [Route("CreateUserWorkout")]
         [HttpPost]
-        public async Task<ActionResult> CreateUserWorkout(string name, int userId, double time, DateTime date, List<object> exercises)
+        public async Task<ActionResult> CreateUserWorkout(string name, int userId, double time, DateTime date, string exercises)
         {
-            //todo fix the exercises
-
             try
             {
+                List<int> exercisesIds = (exercises.Split(',').ToList()).Select(int.Parse).ToList();
+
                 User user = await _context.Users.FirstOrDefaultAsync(x => x.Id == userId);
 
                 if (user == null)
                     return StatusCode(409, Numerators.ApiResponseMessages.UserNotFound);
                 else
                 {
-                    Workout workout = new Workout()
+                    List<Exercise> exercisesToAdd = new();
+
+                    foreach (int exerciseId in exercisesIds)
+                    {
+                        Exercise exercise = await _context.Exercises.FirstOrDefaultAsync(x => x.Id == exerciseId);
+
+                        if (exercise != null)
+                            exercisesToAdd.Add(exercise);
+                        else
+                            return StatusCode(409, Numerators.ApiResponseMessages.ExerciseNotFound);
+                    }
+
+                    Workout workout = new()
                     {
                         Name = name,
                         UserId = userId,
                         Time = time,
                         Date = date,
-                        //Exercises = exercises 
+                        Exercises = exercisesToAdd
                     };
 
                     await _context.Workouts.AddAsync(workout);
@@ -85,10 +113,26 @@ namespace GymCompanion.WebServices.Controllers
 
         [Route("DeleteUserWorkout")]
         [HttpDelete]
-        public async Task<ActionResult> DeleteUserWorkout()
+        public async Task<ActionResult> DeleteUserWorkout(int workoutId)
         {
-            //todo
-            return Ok();
+            try
+            {
+                Workout workoutToDelete = await _context.Workouts.FirstOrDefaultAsync(x => x.Id == workoutId);
+
+                if (workoutToDelete == null)
+                    return StatusCode(409, Numerators.ApiResponseMessages.WorkoutNotFound);
+                else
+                {
+                    _context.Workouts.Remove(workoutToDelete);
+                    await _context.SaveChangesAsync();
+
+                    return Ok(true);
+                }
+            }
+            catch (Exception exception)
+            {
+                return StatusCode(500, exception);
+            }
         }
     }
 }

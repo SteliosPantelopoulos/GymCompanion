@@ -1,5 +1,6 @@
 ﻿using GymCompanion.Data;
 using GymCompanion.Data.Models.Exercises;
+using GymCompanion.WebServices.DAL;
 using GymCompanion.WebServices.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -18,11 +19,11 @@ namespace GymCompanion.WebServices.Controllers
 
         [Route("GetExerciseInfo")]
         [HttpGet]
-        public async Task<ActionResult> GetExerciseInfo(string name)
+        public async Task<ActionResult> GetExerciseInfo(int exerciseId)
         {
             try
             {
-                Exercise exerciseToReturn = await _context.Exercises.FirstOrDefaultAsync(x => x.Name == name);
+                Exercise exerciseToReturn = await _context.Exercises.FirstOrDefaultAsync(x => x.Id == exerciseId);
 
                 if (exerciseToReturn == null)
                     return StatusCode(409, Numerators.ApiResponseMessages.ExerciseNotFound);
@@ -80,23 +81,21 @@ namespace GymCompanion.WebServices.Controllers
 
         [Route("CreateExercise")]
         [HttpPost]
-        public async Task<ActionResult> CreateExercise(string name, string bodyPartName, string description)
+        public async Task<ActionResult> CreateExercise(string name, int bodyPartId, string description)
         {
-            BodyPart bodyPart = await _context.BodyParts.FirstOrDefaultAsync(x => x.Name == bodyPartName);
-
-
             try
             {
+                BodyPart bodyPart = await _context.BodyParts.FirstOrDefaultAsync(x => x.Id == bodyPartId);
                 if (bodyPart != null)
                 {
-                    bool exerciseExists = await _context.Exercises.CountAsync(x => x.Name == name) == 0;
+                    bool exerciseExists = await _context.Exercises.CountAsync(x => x.Name == name) != 0;
 
                     if (!exerciseExists)
                     {
                         Exercise exerciseToAdd = new Exercise()
                         {
                             Name = name,
-                            /*BodyPart =bodyPart.Id,*/
+                            BodyPartId = bodyPart.Id,
                             Description = description
                         };
 
@@ -120,9 +119,9 @@ namespace GymCompanion.WebServices.Controllers
 
         [Route("DeleteExercise")]
         [HttpDelete]
-        public async Task<ActionResult> DeleteExercise(string name)
+        public async Task<ActionResult> DeleteExercise(int exerciseId)
         {
-            Exercise exerciseToDelete = await _context.Exercises.FirstOrDefaultAsync(x => x.Name == name);
+            Exercise exerciseToDelete = await _context.Exercises.FirstOrDefaultAsync(x => x.Id == exerciseId);
 
             try
             {
@@ -145,17 +144,17 @@ namespace GymCompanion.WebServices.Controllers
 
         [Route("UpdateExercise")]
         [HttpPost]
-        public async Task<ActionResult> UpdateExercise(string oldExerciseName, string newExerciseName, string newBodyPart, string newDescription)
+        public async Task<ActionResult> UpdateExercise(int exerciseId, string newExerciseName, int newBodyPartId, string newDescription)
         {
             try
             {
-                Exercise exerciseToUpdate = await _context.Exercises.FirstOrDefaultAsync(x => x.Name == oldExerciseName);
-                BodyPart bodyPart = await _context.BodyParts.FirstOrDefaultAsync(x => x.Name == newBodyPart);
-                bool exerciseNameExists = await _context.Exercises.CountAsync(x => x.Name == newExerciseName) != 0;
+                Exercise exerciseToUpdate = await _context.Exercises.FirstOrDefaultAsync(x => x.Id == exerciseId);
+                BodyPart bodyPart = await _context.BodyParts.FirstOrDefaultAsync(x => x.Id == newBodyPartId);
+                bool exerciseNameExists = await _context.Exercises.CountAsync(x => x.Name == newExerciseName) != 0 && newExerciseName != exerciseToUpdate.Name;
 
                 if (exerciseToUpdate == null)
                     return StatusCode(409, Numerators.ApiResponseMessages.ExerciseNotFound);
-                else if (newBodyPart == null)
+                else if (bodyPart == null)
                     return StatusCode(409, Numerators.ApiResponseMessages.BodyPartNotFound);
                 else if (exerciseNameExists)
                     return StatusCode(409, Numerators.ApiResponseMessages.ExerciseNameIsUsed);

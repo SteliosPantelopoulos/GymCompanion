@@ -12,6 +12,6 @@ namespace GymCompanion.Data.Models.Workouts
 
         public DateTime Date { get; set; }
 
-        public List<GetExerciseInfoModel> Exercises { get; set; } = new List<GetExerciseInfoModel>();
+        public string Exercises { get; set; }
     }
 }

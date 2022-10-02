@@ -1,4 +1,4 @@
-﻿using GymCompanion.WebServices.Models;
+﻿using GymCompanion.WebServices.DAL;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 

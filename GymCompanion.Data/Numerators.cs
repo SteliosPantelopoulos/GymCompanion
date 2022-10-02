@@ -13,7 +13,8 @@
             UserNotFound = 7,
             BodyPartNotFound = 8,
             BodyPartsNotFound = 9,
-            WrongCredentials = 10
+            WorkoutNotFound = 10,
+            WrongCredentials = 11
         }
 
     }

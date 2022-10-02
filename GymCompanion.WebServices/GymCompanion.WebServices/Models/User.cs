@@ -14,8 +14,6 @@ namespace GymCompanion.WebServices.Models
         public string Country { get; set; } = null!;
         public DateTime Birthday { get; set; }
         public DateTime RegistrationDate { get; set; }
-        public int? Workouts { get; set; }
-
-        public virtual Workout? WorkoutsNavigation { get; set; }
+        public ICollection<Workout> Workouts { get; set; }
     }
 }

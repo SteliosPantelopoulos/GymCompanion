@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using GymCompanion.WebServices.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 
-namespace GymCompanion.WebServices.Models
+namespace GymCompanion.WebServices.DAL
 {
     public partial class GymCompanionContext : DbContext
     {
@@ -34,10 +35,13 @@ namespace GymCompanion.WebServices.Models
         {
             modelBuilder.Entity<BodyPart>(entity =>
             {
+                entity.HasKey(e => e.Id)
+                    .HasName("PK_BodyPartId");
+
+                entity.Property(e => e.Id).ValueGeneratedOnAdd();
+
                 entity.HasIndex(e => e.Name, "BodyPart_Name_Unique")
                     .IsUnique();
-
-                entity.Property(e => e.Id).ValueGeneratedNever();
 
                 entity.Property(e => e.Name)
                     .HasMaxLength(50)
@@ -46,10 +50,13 @@ namespace GymCompanion.WebServices.Models
 
             modelBuilder.Entity<Exercise>(entity =>
             {
+                entity.HasKey(e => e.Id)
+                    .HasName("PK_ExerciseId");
+
+                entity.Property(e => e.Id).ValueGeneratedOnAdd();
+
                 entity.HasIndex(e => e.Name, "Exercise_Name_Unique")
                     .IsUnique();
-
-                entity.Property(e => e.Id).ValueGeneratedNever();
 
                 entity.Property(e => e.Description).IsUnicode(false);
 
@@ -57,15 +64,36 @@ namespace GymCompanion.WebServices.Models
                     .HasMaxLength(50)
                     .IsUnicode(false);
 
-                entity.HasOne(d => d.BodyPart)
-                    .WithMany(p => p.Exercises)
-                    .HasForeignKey(d => d.BodyPartId)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK__Exercises__BodyP__5DCAEF64");
+                entity.HasOne<BodyPart>(e => e.BodyPart)
+                    .WithMany(bp => bp.Exercises)
+                    .HasForeignKey(e => e.BodyPartId)
+                    .OnDelete(DeleteBehavior.ClientSetNull);
+            });
+
+            modelBuilder.Entity<Workout>(entity =>
+            {
+                entity.HasKey(e => e.Id)
+                    .HasName("PK_WorkoutId");
+
+                entity.Property(e => e.Id).ValueGeneratedOnAdd();
+
+                entity.Property(e => e.Date).HasColumnType("datetime");
+
+                entity.Property(e => e.Name)
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
+
+                entity.HasMany(w => w.Exercises)
+                    .WithMany(p => p.Workouts);
             });
 
             modelBuilder.Entity<User>(entity =>
             {
+                entity.HasKey(e => e.Id)
+                    .HasName("PK_UserId");
+
+                entity.Property(e => e.Id).ValueGeneratedOnAdd();
+
                 entity.HasIndex(e => e.Email, "User_Email_Unique")
                     .IsUnique();
 
@@ -100,27 +128,13 @@ namespace GymCompanion.WebServices.Models
                     .HasMaxLength(50)
                     .IsUnicode(false);
 
-                entity.HasOne(d => d.WorkoutsNavigation)
-                    .WithMany(p => p.Users)
-                    .HasForeignKey(d => d.Workouts)
-                    .HasConstraintName("FK__Users__Workouts__49C3F6B7");
+                entity.HasMany<Workout>(u => u.Workouts)
+                    .WithOne(w => w.User)
+                    .HasForeignKey(w => w.UserId)
+                    .OnDelete(DeleteBehavior.ClientSetNull);
             });
 
-            modelBuilder.Entity<Workout>(entity =>
-            {
-                entity.Property(e => e.Id).ValueGeneratedNever();
-
-                entity.Property(e => e.Date).HasColumnType("datetime");
-
-                entity.Property(e => e.Name)
-                    .HasMaxLength(50)
-                    .IsUnicode(false);
-
-                entity.HasOne(d => d.ExercisesNavigation)
-                    .WithMany(p => p.Workouts)
-                    .HasForeignKey(d => d.Exercises)
-                    .HasConstraintName("FK__Workouts__Exerci__440B1D61");
-            });
+            
 
             OnModelCreatingPartial(modelBuilder);
         }

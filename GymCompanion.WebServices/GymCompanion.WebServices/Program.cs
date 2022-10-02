@@ -1,7 +1,7 @@
-﻿using GymCompanion.WebServices.Models;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using GymCompanion.WebServices.Controllers;
+using GymCompanion.WebServices.DAL;
 //using GymCompanion.WebServices.Data;
 
 var builder = WebApplication.CreateBuilder(args);
