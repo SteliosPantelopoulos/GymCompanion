@@ -381,4 +381,39 @@
         <Setter Property="SelectedTabColor" Value="{AppThemeBinding Light={StaticResource Gray950}, Dark={StaticResource Gray200}}" />
     </Style>
 
+
+
+
+
+
+
+
+
+
+
+
+    <Style x:Key="EntryValidationFalse" TargetType="Entry">
+        <Setter Property="BackgroundColor" Value="Red" />
+    </Style>
+
+    <Style x:Key="EntryValidationTrue" TargetType="Entry">
+        <Setter Property="BackgroundColor" Value="Green" />
+    </Style>
+
+    <Style x:Key="PickerValidationFalse" TargetType="Picker">
+        <Setter Property="TitleColor" Value="Red" />
+    </Style>
+
+    <Style x:Key="PickerValidationTrue" TargetType="Picker">
+        <Setter Property="TitleColor" Value="Green" />
+    </Style>
+
+    <Style x:Key="ButtonDisabled" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="Red" />
+    </Style>
+
+    <Style x:Key="ButtonEnabled" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="Green" />
+    </Style>
+
 </ResourceDictionary>

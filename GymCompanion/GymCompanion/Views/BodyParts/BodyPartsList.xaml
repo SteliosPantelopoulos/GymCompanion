@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:Models="clr-namespace:GymCompanion.Data.Models.BodyParts;assembly=GymCompanion.Data"
+             xmlns:ViewModel="clr-namespace:GymCompanion.ViewModels.BodyParts"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             
+             x:Class="GymCompanion.Views.BodyParts.BodyPartsList"
+             x:DataType="ViewModel:BodyPartsListViewModel"
+             Title="{Binding Title}">
+
+    <ContentPage.Behaviors>
+        <toolkit:EventToCommandBehavior
+                    Command="{Binding GetBodyPartsCommand}"
+                    EventName="Appearing"/>
+    </ContentPage.Behaviors>
+
+    <Grid ColumnDefinitions="*,*"
+          ColumnSpacing="5"
+          RowDefinitions="*, Auto"
+          RowSpacing="0">
+
+
+        <CollectionView Background="white"
+                        Grid.ColumnSpan="2"
+                        ItemsSource="{Binding BodyParts}"
+                        SelectionMode="None">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="Models:BodyPartModel">
+                    <Grid Padding="5">
+                        <Frame HeightRequest="125">
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer NumberOfTapsRequired="1"
+                                                      CommandParameter="{Binding .}"
+                                                      Command="{Binding Source={RelativeSource AncestorType={x:Type ViewModel:BodyPartsListViewModel}}, Path=GoToDetailsCommand}"/>
+
+                                <SwipeGestureRecognizer  Direction="Left"
+                                                        CommandParameter="{Binding .}"
+                                                      Command="{Binding Source={RelativeSource AncestorType={x:Type ViewModel:BodyPartsListViewModel}}, Path=DeleteBodyPartCommand}"/>
+                            </Frame.GestureRecognizers>
+                            <VerticalStackLayout>
+                                <Label Text="{Binding Name}" FontSize="20"/>
+                            </VerticalStackLayout>
+                        </Frame>
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+
+        </CollectionView>
+
+        <Button Text="Get body parts"
+                Grid.Row="1"
+                Margin="8"
+                Command="{Binding GetBodyPartsCommand}"
+                IsEnabled="{Binding IsNotBusy}"/>
+
+        <Button Text="Add body part"
+                Grid.Row="1"
+                Grid.Column="2"
+                Margin="8"
+                Command="{Binding GoToCreateCommand}"/>
+
+        <ActivityIndicator IsVisible="{Binding IsBusy}"
+                           IsRunning="{Binding IsBusy}"
+                           HorizontalOptions="FillAndExpand"
+                           VerticalOptions="CenterAndExpand"
+                           Grid.RowSpan="2"
+                           Grid.ColumnSpan="2"/>
+    </Grid>
+</ContentPage>

@@ -1,0 +1,26 @@
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="GymCompanion.Views.Shared.BodyParts.BodyPartFormPartialPage">
+
+    <VerticalStackLayout>
+        <Label Text= "Enter name"/>
+        <Entry Text="{Binding BodyPartModel.Name}"/>
+
+        <Label x:Name="Title"
+            Text= "{Binding Title}"/>
+
+        <Button x:Name="CreateButton"
+                Text="Create"
+                Margin="8"
+                Command="{Binding CreateBodyPartCommand}"
+                IsEnabled="{Binding IsNotBusy}"/>
+
+        <Button x:Name="UpdateButton"
+                Text="Update"
+                Margin="8"
+                Command="{Binding UpdateBodyPartCommand}"
+                IsEnabled="{Binding IsNotBusy}"/>
+    </VerticalStackLayout>
+
+
+</ContentView>

@@ -92,6 +92,31 @@ namespace GymCompanion.WebServices.Migrations
                     b.ToTable("Exercises");
                 });
 
+            modelBuilder.Entity("GymCompanion.WebServices.Models.Set", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<double>("Kilograms")
+                        .HasColumnType("float");
+
+                    b.Property<int>("Reps")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserExerciseId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id")
+                        .HasName("PK_SetId");
+
+                    b.HasIndex("UserExerciseId");
+
+                    b.ToTable("Sets");
+                });
+
             modelBuilder.Entity("GymCompanion.WebServices.Models.User", b =>
                 {
                     b.Property<int>("Id")
@@ -154,6 +179,30 @@ namespace GymCompanion.WebServices.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("GymCompanion.WebServices.Models.UserExercise", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<int>("ExerciseId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id")
+                        .HasName("PK_UserExerciseId");
+
+                    b.HasIndex("ExerciseId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserExercises");
+                });
+
             modelBuilder.Entity("GymCompanion.WebServices.Models.Workout", b =>
                 {
                     b.Property<int>("Id")
@@ -210,6 +259,33 @@ namespace GymCompanion.WebServices.Migrations
                     b.Navigation("BodyPart");
                 });
 
+            modelBuilder.Entity("GymCompanion.WebServices.Models.Set", b =>
+                {
+                    b.HasOne("GymCompanion.WebServices.Models.UserExercise", "UserExercise")
+                        .WithMany("Sets")
+                        .HasForeignKey("UserExerciseId")
+                        .IsRequired();
+
+                    b.Navigation("UserExercise");
+                });
+
+            modelBuilder.Entity("GymCompanion.WebServices.Models.UserExercise", b =>
+                {
+                    b.HasOne("GymCompanion.WebServices.Models.Exercise", "Exercise")
+                        .WithMany("UserExercises")
+                        .HasForeignKey("ExerciseId")
+                        .IsRequired();
+
+                    b.HasOne("GymCompanion.WebServices.Models.User", "User")
+                        .WithMany("UserExercises")
+                        .HasForeignKey("UserId")
+                        .IsRequired();
+
+                    b.Navigation("Exercise");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("GymCompanion.WebServices.Models.Workout", b =>
                 {
                     b.HasOne("GymCompanion.WebServices.Models.User", "User")
@@ -225,9 +301,21 @@ namespace GymCompanion.WebServices.Migrations
                     b.Navigation("Exercises");
                 });
 
+            modelBuilder.Entity("GymCompanion.WebServices.Models.Exercise", b =>
+                {
+                    b.Navigation("UserExercises");
+                });
+
             modelBuilder.Entity("GymCompanion.WebServices.Models.User", b =>
                 {
+                    b.Navigation("UserExercises");
+
                     b.Navigation("Workouts");
+                });
+
+            modelBuilder.Entity("GymCompanion.WebServices.Models.UserExercise", b =>
+                {
+                    b.Navigation("Sets");
                 });
 #pragma warning restore 612, 618
         }

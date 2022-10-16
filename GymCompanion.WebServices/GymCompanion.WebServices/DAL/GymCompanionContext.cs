@@ -21,6 +21,8 @@ namespace GymCompanion.WebServices.DAL
         public virtual DbSet<Exercise> Exercises { get; set; } = null!;
         public virtual DbSet<User> Users { get; set; } = null!;
         public virtual DbSet<Workout> Workouts { get; set; } = null!;
+        public virtual DbSet<UserExercise> UserExercises { get; set; } = null;
+        public virtual DbSet<Set> Sets { get; set; } = null;
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -132,9 +134,41 @@ namespace GymCompanion.WebServices.DAL
                     .WithOne(w => w.User)
                     .HasForeignKey(w => w.UserId)
                     .OnDelete(DeleteBehavior.ClientSetNull);
+
+                entity.HasMany<UserExercise>(u => u.UserExercises)
+                    .WithOne(ue => ue.User)
+                    .HasForeignKey(ue => ue.UserId)
+                    .OnDelete(DeleteBehavior.ClientSetNull);
+
             });
 
-            
+            modelBuilder.Entity<Set>(entity =>
+            {
+                entity.HasKey(s => s.Id)
+                    .HasName("PK_SetId");
+
+                entity.Property(e => e.Id).ValueGeneratedOnAdd();
+
+            });
+
+            modelBuilder.Entity<UserExercise>(entity =>
+            {
+                entity.HasKey(e => e.Id)
+                    .HasName("PK_UserExerciseId");
+
+                entity.Property(e => e.Id).ValueGeneratedOnAdd();
+
+                entity.HasMany<Set>(ue => ue.Sets)
+                    .WithOne(s => s.UserExercise)
+                    .HasForeignKey(s => s.UserExerciseId)
+                    .OnDelete(DeleteBehavior.ClientSetNull);
+
+                entity.HasOne<Exercise>(ue => ue.Exercise)
+                    .WithMany(e => e.UserExercises)
+                    .HasForeignKey(ue => ue.ExerciseId)
+                    .OnDelete(DeleteBehavior.ClientSetNull);
+
+            });
 
             OnModelCreatingPartial(modelBuilder);
         }

@@ -1,6 +1,9 @@
 ﻿using GymCompanion.Data;
+using GymCompanion.Data.Models.Exercises;
 using GymCompanion.Data.Models.Workouts;
+using GymCompanion.Data.ServicesModels.Workouts;
 using GymCompanion.WebServices.DAL;
+using GymCompanion.WebServices.Helpers;
 using GymCompanion.WebServices.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -29,31 +32,19 @@ namespace GymCompanion.WebServices.Controllers
                     return StatusCode(409, Numerators.ApiResponseMessages.UserNotFound);
                 else
                 {
-                    List<GetUserWorkoutsModel> model = new();
-
-                    List<Workout> userWorkouts = await _context.Workouts.Where(x => x.UserId == user.Id).ToListAsync();
-                    foreach (Workout workout in userWorkouts)
+                    List<Workout> workoutsToReturn = await _context.Workouts.Where(x => x.UserId == user.Id).ToListAsync();
+                    
+                    Dictionary<int, List<Exercise>> exercisesValuePairs = new();
+                    foreach (Workout workout in workoutsToReturn)
                     {
                         List<Exercise> listOfExercises = await _context.Exercises.Where(e => e.Workouts.Contains(workout)).ToListAsync();
-                        List<string> listOfExercisesId = new();
-                        foreach (Exercise exercise in listOfExercises)
-                            listOfExercisesId.Add(exercise.Id.ToString());
-
-                        string exercises = String.Join(",", listOfExercisesId);
-
-
-                        GetUserWorkoutsModel tempWorkout = new()
-                        {
-                            Id = workout.Id,
-                            Name = workout.Name,
-                            UserId = workout.Id,
-                            Time = (double)workout.Time,
-                            Date = workout.Date,
-                            Exercises = exercises
-                        };
-
-                        model.Add(tempWorkout);
+                        exercisesValuePairs.Add(workout.Id, listOfExercises);
                     }
+
+                    GetUserWorkoutsModel model = new()
+                    {
+                        Workouts = ModelsAdapter.Workouts(workoutsToReturn, exercisesValuePairs)
+                    };
 
                     return Ok(model);
                 }   

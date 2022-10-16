@@ -48,4 +48,82 @@
 		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <PackageReference Include="CommunityToolkit.Maui" Version="1.3.0" />
+	  <PackageReference Include="CommunityToolkit.Mvvm" Version="8.0.0" />
+	  <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Reference Include="GymCompanion.Calls">
+	    <HintPath>..\GymCompanion.Calls\bin\Debug\net6.0\GymCompanion.Calls.dll</HintPath>
+	  </Reference>
+	  <Reference Include="GymCompanion.Data">
+	    <HintPath>..\..\GymCompanion.Data\bin\Debug\net6.0\GymCompanion.Data.dll</HintPath>
+	  </Reference>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Update="Resources\Texts\ApplicationMessages.Designer.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>ApplicationMessages.resx</DependentUpon>
+	  </Compile>
+	  <Compile Update="Resources\Texts\BodyParts.Designer.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>BodyParts.resx</DependentUpon>
+	  </Compile>
+	  <Compile Update="Views\BodyParts\BodyPartDetailsPage.xaml.cs">
+	    <DependentUpon>BodyPartDetailsPage.xaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Views\BodyParts\BodyPartsList.xaml.cs">
+	    <DependentUpon>BodyPartsList.xaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Views\Exercises\ExercisesList.xaml.cs">
+	    <DependentUpon>ExercisesList.xaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Views\Shared\BodyParts\BodyPartFormPartialPage.xaml.cs">
+	    <DependentUpon>BodyPartFormPartialPage.xaml</DependentUpon>
+	  </Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EmbeddedResource Update="Resources\Texts\ApplicationMessages.resx">
+	    <Generator>ResXFileCodeGenerator</Generator>
+	    <LastGenOutput>ApplicationMessages.Designer.cs</LastGenOutput>
+	  </EmbeddedResource>
+	  <EmbeddedResource Update="Resources\Texts\BodyParts.resx">
+	    <Generator>ResXFileCodeGenerator</Generator>
+	    <LastGenOutput>BodyParts.Designer.cs</LastGenOutput>
+	  </EmbeddedResource>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <MauiXaml Update="Views\BodyParts\BodyPartCreatePage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\BodyParts\BodyPartDetailsPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\BodyParts\BodyPartsList.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\Exercises\ExerciseCreatePage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\Exercises\ExerciseDetailsPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\Exercises\ExercisesList.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\Shared\BodyParts\BodyPartFormPartialPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\Shared\Exercises\ExercisesFormPartialPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	</ItemGroup>
+
 </Project>

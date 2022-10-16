@@ -15,5 +15,7 @@ namespace GymCompanion.WebServices.Models
         public DateTime Birthday { get; set; }
         public DateTime RegistrationDate { get; set; }
         public ICollection<Workout> Workouts { get; set; }
+
+        public virtual List<UserExercise> UserExercises { get; set; }
     }
 }

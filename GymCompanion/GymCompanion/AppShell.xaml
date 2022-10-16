@@ -4,11 +4,16 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:GymCompanion"
-    Shell.FlyoutBehavior="Disabled">
+    xmlns:views="clr-namespace:GymCompanion.Views"
+    Shell.FlyoutBehavior="Flyout">
 
-    <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" />
+    <Shell.FlyoutHeader>
+        <Label>Menu</Label>
+    </Shell.FlyoutHeader>
 
+    <ShellContent Title="Home" ContentTemplate="{DataTemplate local:MainPage}" />
+
+    <ShellContent Title="Details Exercises" ContentTemplate="{DataTemplate views:Exercises.ExercisesList}" />
+
+    <ShellContent Title="Details Bodyparts" ContentTemplate="{DataTemplate views:BodyParts.BodyPartsList}" />
 </Shell>

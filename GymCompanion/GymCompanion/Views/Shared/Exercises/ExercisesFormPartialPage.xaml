@@ -1,0 +1,33 @@
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="GymCompanion.Views.Shared.Exercises.ExercisesFormPartialPage">
+
+    <VerticalStackLayout>
+        <Label Text="Name" />
+        <Entry Text="{Binding ExerciseModel.Name}"/>
+
+        <Label Text="Body Part" />
+        <Picker x:Name="BpPicker"
+                ItemsSource="{Binding BodyParts}"
+                ItemDisplayBinding="{Binding Name}"
+                SelectedItem="{Binding SelectedBodyPart}">
+            <!--SelectedIndex="{Binding SelectedBodyPart.Id}"-->
+        </Picker>
+
+        <Label Text="Description" />
+        <Entry Text="{Binding ExerciseModel.Description}"/>
+
+        <Button x:Name="CreateButton"
+                Text="Save"
+                Margin="8"
+                Command="{Binding CreateExerciseCommand}"
+                IsEnabled="{Binding IsNotBusy}"/>
+
+        <Button x:Name="UpdateButton"
+                Text="Update"
+                Margin="8"
+                Command="{Binding UpdateExerciseCommand}"
+                IsEnabled="{Binding IsNotBusy}"/>
+    </VerticalStackLayout>
+
+</ContentPage>

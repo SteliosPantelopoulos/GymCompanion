@@ -30,7 +30,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+#if !DEBUG
+    app.UseHttpsRedirection();
+#endif
 
 app.UseAuthorization();
 
