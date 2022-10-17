@@ -132,6 +132,9 @@ namespace GymCompanion.WebServices.Controllers
                 }
                 else
                 {
+                    List<Exercise> exercisesToDelete = await _context.Exercises.Where(x => x.BodyPartId == bodyPartId).ToListAsync();
+
+                    _context.RemoveRange(exercisesToDelete);
                     _context.Remove(bodyPartToDelete);
                     await _context.SaveChangesAsync();
 

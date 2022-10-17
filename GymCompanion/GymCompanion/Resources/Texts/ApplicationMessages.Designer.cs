@@ -151,6 +151,15 @@ namespace GymCompanion.Resources.Texts {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Exercise was successfully deleted!.
+        /// </summary>
+        internal static string ExerciseDeleteSuccess {
+            get {
+                return ResourceManager.GetString("ExerciseDeleteSuccess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Exercise name is used..
         /// </summary>
         internal static string ExerciseNameIsUsed {

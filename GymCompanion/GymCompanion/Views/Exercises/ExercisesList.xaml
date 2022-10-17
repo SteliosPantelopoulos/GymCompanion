@@ -15,6 +15,49 @@
                     EventName="Appearing"/>
     </ContentPage.Behaviors>
 
+    <ContentPage.Resources>
+        <ResourceDictionary>
+
+            <DataTemplate x:Key="ExerciseTemplate"
+                          x:DataType="Models:ExerciseModel">
+                <SwipeView>
+                    <SwipeView.RightItems>
+                        <SwipeItems Mode="Execute">
+                            <SwipeItem Text="Delete"
+                                   IconImageSource="delete.png"
+                                   BackgroundColor="LightPink"
+                                   Command="{Binding Source={RelativeSource AncestorType={x:Type ViewModel:ExercisesListViewModel}}, Path=DeleteExerciseCommand}"
+                                   CommandParameter="{Binding .}" />
+
+                        </SwipeItems>
+                    </SwipeView.RightItems>
+                    <SwipeView.Content>
+                        <Grid Padding="5">
+                            <Frame HeightRequest="125">
+                                <Frame.GestureRecognizers>
+                                    <TapGestureRecognizer NumberOfTapsRequired="1"
+                                                      CommandParameter="{Binding .}"
+                                                      Command="{Binding Source={RelativeSource AncestorType={x:Type ViewModel:ExercisesListViewModel}}, Path=GoToDetailsCommand}"/>
+                                </Frame.GestureRecognizers>
+                                <VerticalStackLayout>
+                                    <Label Text="{Binding Name}" FontSize="20"/>
+                                    <Label Text="{Binding Description}" FontSize="15"/>
+                                </VerticalStackLayout>
+                            </Frame>
+                        </Grid>
+                    </SwipeView.Content>
+
+                </SwipeView>
+            </DataTemplate>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+
+
+
+
+
+
     <Grid ColumnDefinitions="*,*"
           ColumnSpacing="5"
           RowDefinitions="*, Auto"
@@ -24,27 +67,8 @@
         <CollectionView Background="white"
                         Grid.ColumnSpan="2"
                         ItemsSource="{Binding Exercises}"
-                        SelectionMode="None">
-            <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="Models:ExerciseModel">
-                    <Grid Padding="5">
-                        <Frame HeightRequest="125">
-                            <Frame.GestureRecognizers>
-                                <TapGestureRecognizer NumberOfTapsRequired="1"
-                                                      CommandParameter="{Binding .}"
-                                                      Command="{Binding Source={RelativeSource AncestorType={x:Type ViewModel:ExercisesListViewModel}}, Path=GoToDetailsCommand}"/>
-
-                            </Frame.GestureRecognizers>
-                            <VerticalStackLayout>
-                                <Label Text="{Binding Name}" FontSize="20"/>
-                                <Label Text="{Binding Description}" FontSize="15"/>
-                            </VerticalStackLayout>
-                        </Frame>
-                    </Grid>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-            
-        </CollectionView>
+                        ItemTemplate="{StaticResource ExerciseTemplate}"
+                        SelectionMode="None"/>
 
         <Button Text="Get exercises"
                 Grid.Row="1"
@@ -65,4 +89,7 @@
                            Grid.RowSpan="2"
                            Grid.ColumnSpan="2"/>
     </Grid>
+
+
+
 </ContentPage>

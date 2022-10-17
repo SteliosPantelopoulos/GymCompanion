@@ -9,4 +9,9 @@ public partial class ExercisesList : ContentPage
 		InitializeComponent();
 		BindingContext = viewModel;
 	}
+
+	private void SwipeItem_Invoked(object sender, EventArgs e)
+	{
+
+	}
 }

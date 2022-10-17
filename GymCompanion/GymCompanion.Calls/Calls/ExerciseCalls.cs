@@ -48,13 +48,13 @@ namespace GymCompanion.Calls
             return JsonConvert.DeserializeObject<BooleanModel>(response);
         }
 
-        public async Task<BooleanModel> DeleteExerciseAsync(string exerciseId)
+        public async Task<BooleanModel> DeleteExerciseAsync(int exerciseId)
         {
             string serviceUrl = "api/Exercises/DeleteExercise?";
 
             var parameters = new FormUrlEncodedContent(new Dictionary<string, string>
             {
-                {"exerciseId", exerciseId }
+                {"exerciseId", exerciseId.ToString() }
             });
 
             string response = await ConnectionHelper.ContactWebServiceDeleteAsync(serviceUrl, parameters.ReadAsStringAsync().Result);

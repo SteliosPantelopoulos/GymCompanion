@@ -147,6 +147,9 @@
   <data name="ExerciseCreateSuccess" xml:space="preserve">
     <value>Exercise was successfully created!</value>
   </data>
+  <data name="ExerciseDeleteSuccess" xml:space="preserve">
+    <value>Exercise was successfully deleted!</value>
+  </data>
   <data name="ExerciseNameIsUsed" xml:space="preserve">
     <value>Exercise name is used.</value>
   </data>
