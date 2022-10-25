@@ -2,7 +2,7 @@
 
 namespace GymCompanion.Data.Models.Exercises
 {
-    public class GetExerciseInfoModel : BaseModel
+    public class GetExerciseInfoModel
     {
         public ExerciseModel Exercise { get; set; }
     }

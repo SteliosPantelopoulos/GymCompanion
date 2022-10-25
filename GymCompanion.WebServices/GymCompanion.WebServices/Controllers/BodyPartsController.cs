@@ -1,17 +1,16 @@
-﻿using GymCompanion.Data;
-using GymCompanion.Data.Models.BodyParts;
-using GymCompanion.Data.Models.Exercises;
-using GymCompanion.Data.Models.General;
+﻿using GymCompanion.Data.Models.BodyParts;
+using GymCompanion.Data.ServicesModels.BodyParts;
 using GymCompanion.WebServices.DAL;
 using GymCompanion.WebServices.Helpers;
 using GymCompanion.WebServices.Models;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 
 namespace GymCompanion.WebServices.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class BodyPartsController : BaseApiController
@@ -33,19 +32,16 @@ namespace GymCompanion.WebServices.Controllers
                 if (bodyPartToReturn != null)
                 {
                     model.BodyPart = ModelsAdapter.BodyPart(bodyPartToReturn);
-
                     return Ok(JsonConvert.SerializeObject(model));
                 }
                 else
                 {
-                    model.ApiResponseMessage = (int)Numerators.ApiResponseMessages.BodyPartNotFound;
-                    return StatusCode(409, JsonConvert.SerializeObject(model));
+                    return NotFound();
                 }
             }
             catch (Exception exception)
             {
-                model.ExceptionMessage = exception;
-                return StatusCode(500, JsonConvert.SerializeObject(model));
+                return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
 
@@ -56,7 +52,7 @@ namespace GymCompanion.WebServices.Controllers
             GetBodyPartsInfoModel model = new();
             try
             {
-                List<BodyPart> bodyPartsToReturn = await _context.BodyParts.OrderBy(x=>x.Id).ToListAsync();
+                List<BodyPart> bodyPartsToReturn = await _context.BodyParts.OrderBy(x => x.Name).ToListAsync();
 
                 if (bodyPartsToReturn != null)
                 {
@@ -69,49 +65,43 @@ namespace GymCompanion.WebServices.Controllers
                 }
                 else
                 {
-                    model.ApiResponseMessage = (int)Numerators.ApiResponseMessages.BodyPartsNotFound;
-                    return StatusCode(409, JsonConvert.SerializeObject(model));
+                    return NotFound();
                 }
             }
             catch (Exception exception)
             {
-                model.ExceptionMessage = exception;
-                return StatusCode(500, JsonConvert.SerializeObject(model));
+                return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
 
         [Route("CreateBodyPart")]
         [HttpPost]
-        public async Task<ActionResult> CreateBodyPart(string name)
+        public async Task<ActionResult> CreateBodyPart([FromBody] CreateBodyPartModel model)
         {
-            BooleanModel model = new();
             try
             {
-                bool bodyPartExists = await _context.BodyParts.CountAsync(x => x.Name == name) != 0;
+                bool bodyPartExists = await _context.BodyParts.CountAsync(x => x.Name == model.Name) != 0;
 
                 if (bodyPartExists)
                 {
-                    model.ApiResponseMessage = (int)Numerators.ApiResponseMessages.BodyPartNameIsUsed;
-                    return StatusCode(409, JsonConvert.SerializeObject(model));
+                    return Conflict();
                 }
                 else
                 {
                     BodyPart bodyPart = new()
                     {
-                        Name = name
+                        Name = model.Name
                     };
 
                     await _context.BodyParts.AddAsync(bodyPart);
                     await _context.SaveChangesAsync();
 
-                    model.Result = true;
-                    return Ok(JsonConvert.SerializeObject(model));
+                    return Ok();
                 }
             }
             catch (Exception exception)
             {
-                model.ExceptionMessage = exception;
-                return StatusCode(500, JsonConvert.SerializeObject(model));
+                return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
 
@@ -119,18 +109,11 @@ namespace GymCompanion.WebServices.Controllers
         [HttpDelete]
         public async Task<ActionResult> DeleteBodyPart(int bodyPartId)
         {
-            BooleanModel model = new();
             try
             {
                 BodyPart bodyPartToDelete = await _context.BodyParts.FirstOrDefaultAsync(x => x.Id == bodyPartId);
 
-                if (bodyPartToDelete == null)
-                {
-                    model.Result = false;
-                    model.ApiResponseMessage = (int)Numerators.ApiResponseMessages.BodyPartNotFound;
-                    return StatusCode(409, JsonConvert.SerializeObject(model));
-                }
-                else
+                if (bodyPartToDelete != null)
                 {
                     List<Exercise> exercisesToDelete = await _context.Exercises.Where(x => x.BodyPartId == bodyPartId).ToListAsync();
 
@@ -138,53 +121,43 @@ namespace GymCompanion.WebServices.Controllers
                     _context.Remove(bodyPartToDelete);
                     await _context.SaveChangesAsync();
 
-                    model.Result = true;
-                    return Ok(JsonConvert.SerializeObject(model));
+                    return Ok();
+                }
+                else
+                {
+                    return NotFound();
                 }
             }
             catch (Exception exception)
             {
-                model.ExceptionMessage = exception;
-                return StatusCode(500, JsonConvert.SerializeObject(model));
+                return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
 
         [Route("UpdateBodyPart")]
         [HttpPost]
-        public async Task<ActionResult> UpdateBodyPart(int bodyPartId, string newName)
+        public async Task<ActionResult> UpdateBodyPart([FromBody] UpdateBodyPartModel model)
         {
-            BooleanModel model = new();
-
             try
             {
-                BodyPart bodyPartToUdpate = await _context.BodyParts.FirstOrDefaultAsync(x => x.Id == bodyPartId);
-                bool nameIsUsed = await _context.BodyParts.CountAsync(x => x.Name == newName) != 0 && bodyPartToUdpate.Name != newName;
+                BodyPart bodyPartToUdpate = await _context.BodyParts.FirstOrDefaultAsync(x => x.Id == model.Id);
+                bool nameIsUsed = await _context.BodyParts.CountAsync(x => x.Name == model.Name) != 0 && bodyPartToUdpate.Name != model.Name;
 
                 if (bodyPartToUdpate == null)
-                {
-                    model.Result = false;
-                    model.ApiResponseMessage = (int)Numerators.ApiResponseMessages.BodyPartNotFound;
-                    return StatusCode(409, JsonConvert.SerializeObject(model));
-                }
+                    return NotFound();
                 else if (nameIsUsed)
-                {
-                    model.Result = false;
-                    model.ApiResponseMessage = (int)Numerators.ApiResponseMessages.BodyPartNameIsUsed;
-                    return StatusCode(409, JsonConvert.SerializeObject(model));
-                }
+                    return Conflict();
                 else
                 {
-                    bodyPartToUdpate.Name = newName;
+                    bodyPartToUdpate.Name = model.Name;
                     await _context.SaveChangesAsync();
 
-                    model.Result = true;
-                    return Ok(JsonConvert.SerializeObject(model));
+                    return Ok();
                 }
             }
             catch (Exception exception)
             {
-                model.ExceptionMessage = exception;
-                return StatusCode(500, JsonConvert.SerializeObject(model));
+                return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
     }

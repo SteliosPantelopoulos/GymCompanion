@@ -59,12 +59,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Reference Include="GymCompanion.Calls">
-	    <HintPath>..\GymCompanion.Calls\bin\Debug\net6.0\GymCompanion.Calls.dll</HintPath>
-	  </Reference>
-	  <Reference Include="GymCompanion.Data">
-	    <HintPath>..\..\GymCompanion.Data\bin\Debug\net6.0\GymCompanion.Data.dll</HintPath>
-	  </Reference>
+	  <ProjectReference Include="..\..\GymCompanion.WebServices\GymCompanion.Data\GymCompanion.Data.csproj" />
+	  <ProjectReference Include="..\GymCompanion.Calls\GymCompanion.Calls.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

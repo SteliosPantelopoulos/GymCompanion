@@ -8,13 +8,12 @@
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Maui" Version="1.3.0" />
+    <PackageReference Include="Microsoft.Maui.Extensions" Version="6.0.486" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="GymCompanion.Data">
-      <HintPath>..\..\GymCompanion.Data\bin\Debug\net6.0\GymCompanion.Data.dll</HintPath>
-    </Reference>
+    <ProjectReference Include="..\..\GymCompanion.WebServices\GymCompanion.Data\GymCompanion.Data.csproj" />
   </ItemGroup>
 
 </Project>

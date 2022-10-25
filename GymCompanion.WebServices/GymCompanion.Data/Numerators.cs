@@ -14,7 +14,8 @@
             BodyPartNotFound = 8,
             BodyPartsNotFound = 9,
             WorkoutNotFound = 10,
-            WrongCredentials = 11
+            WrongCredentials = 11,
+            Unauthorized = 13
         }
 
     }

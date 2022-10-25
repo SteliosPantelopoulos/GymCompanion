@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -9,45 +10,77 @@ namespace GymCompanion.Helpers
 {
     public static class ApiResponseMessagesInitializer
     {
-        public static async Task ShowMessage(int apiResponseMessageCode)
+        public static async Task TranslateStatusCodeToMessage(HttpStatusCode statusCode, ViewsNumerator.BodyParts view)
         {
-            switch (apiResponseMessageCode)
+            switch (statusCode)
             {
-                case (int)Numerators.ApiResponseMessages.EmailIsUsed:
-                    await Shell.Current.DisplayAlert(Resources.Texts.ApplicationMessages.Failure, Resources.Texts.ApplicationMessages.EmailIsUsed, Resources.Texts.ApplicationMessages.Ok);
+                case HttpStatusCode.OK:
+                    if (view == ViewsNumerator.BodyParts.Create)
+                        await Shell.Current.DisplayAlert(Resources.Texts.ApplicationMessages.Success, Resources.Texts.ApplicationMessages.BodyPartCreateSuccess, Resources.Texts.ApplicationMessages.Ok);
+                    else if (view == ViewsNumerator.BodyParts.Delete)
+                        await Shell.Current.DisplayAlert(Resources.Texts.ApplicationMessages.Success, Resources.Texts.ApplicationMessages.BodyPartDeleteSuccess, Resources.Texts.ApplicationMessages.Ok);
+                    else if (view == ViewsNumerator.BodyParts.Update)
+                        await Shell.Current.DisplayAlert(Resources.Texts.ApplicationMessages.Success, Resources.Texts.ApplicationMessages.BodyPartUpdateSuccess, Resources.Texts.ApplicationMessages.Ok);
                     break;
-                case (int)Numerators.ApiResponseMessages.UsernameIsUsed:
-                    await Shell.Current.DisplayAlert(Resources.Texts.ApplicationMessages.Failure, Resources.Texts.ApplicationMessages.UsernameIsUsed, Resources.Texts.ApplicationMessages.Ok);
+                case HttpStatusCode.Unauthorized:
+                    await Shell.Current.DisplayAlert(Resources.Texts.ApplicationMessages.Error, Resources.Texts.ApplicationMessages.Unauthorized, Resources.Texts.ApplicationMessages.Ok);
                     break;
-                case (int)Numerators.ApiResponseMessages.ExerciseNameIsUsed:
-                    await Shell.Current.DisplayAlert(Resources.Texts.ApplicationMessages.Failure, Resources.Texts.ApplicationMessages.ExerciseNameIsUsed, Resources.Texts.ApplicationMessages.Ok);
+                case HttpStatusCode.InternalServerError:
+                    await Shell.Current.DisplayAlert(Resources.Texts.ApplicationMessages.Error, Resources.Texts.ApplicationMessages.InternalServerError, Resources.Texts.ApplicationMessages.Ok);
                     break;
-                case (int)Numerators.ApiResponseMessages.BodyPartNameIsUsed:
-                    await Shell.Current.DisplayAlert(Resources.Texts.ApplicationMessages.Failure, Resources.Texts.ApplicationMessages.BodyPartNameIsUsed, Resources.Texts.ApplicationMessages.Ok);
+                case HttpStatusCode.BadRequest:
+                    await Shell.Current.DisplayAlert(Resources.Texts.ApplicationMessages.Error, Resources.Texts.ApplicationMessages.ApplicationError, Resources.Texts.ApplicationMessages.Ok);
                     break;
-                case (int)Numerators.ApiResponseMessages.ExerciseNotFound:
-                    await Shell.Current.DisplayAlert(Resources.Texts.ApplicationMessages.Failure, Resources.Texts.ApplicationMessages.ExerciseNotFound, Resources.Texts.ApplicationMessages.Ok);
+                case HttpStatusCode.NotFound:
+                    if (view == ViewsNumerator.BodyParts.List)
+                        await Shell.Current.DisplayAlert(Resources.Texts.ApplicationMessages.Error, Resources.Texts.ApplicationMessages.BodyPartsNotFound, Resources.Texts.ApplicationMessages.Ok);
+                    else
+                        await Shell.Current.DisplayAlert(Resources.Texts.ApplicationMessages.Error, Resources.Texts.ApplicationMessages.BodyPartNotFound, Resources.Texts.ApplicationMessages.Ok);
                     break;
-                case (int)Numerators.ApiResponseMessages.ExercisesNotFound:
-                    await Shell.Current.DisplayAlert(Resources.Texts.ApplicationMessages.Failure, Resources.Texts.ApplicationMessages.ExercisesNotFound, Resources.Texts.ApplicationMessages.Ok);
+                case HttpStatusCode.Conflict:
+                    await Shell.Current.DisplayAlert(Resources.Texts.ApplicationMessages.Error, Resources.Texts.ApplicationMessages.BodyPartExists, Resources.Texts.ApplicationMessages.Ok);
                     break;
-                case (int)Numerators.ApiResponseMessages.UserNotFound:
-                    await Shell.Current.DisplayAlert(Resources.Texts.ApplicationMessages.Failure, Resources.Texts.ApplicationMessages.UserNotFound, Resources.Texts.ApplicationMessages.Ok);
-                    break;
-                case (int)Numerators.ApiResponseMessages.BodyPartNotFound:
-                    await Shell.Current.DisplayAlert(Resources.Texts.ApplicationMessages.Failure, Resources.Texts.ApplicationMessages.BodyPartNotFound, Resources.Texts.ApplicationMessages.Ok);
-                    break;
-                case (int)Numerators.ApiResponseMessages.BodyPartsNotFound:
-                    await Shell.Current.DisplayAlert(Resources.Texts.ApplicationMessages.Failure, Resources.Texts.ApplicationMessages.BodyPartsNotFound, Resources.Texts.ApplicationMessages.Ok);
-                    break;
-                case (int)Numerators.ApiResponseMessages.WorkoutNotFound:
-                    await Shell.Current.DisplayAlert(Resources.Texts.ApplicationMessages.Failure, Resources.Texts.ApplicationMessages.WorkoutNotFound, Resources.Texts.ApplicationMessages.Ok);
-                    break;
-                case (int)Numerators.ApiResponseMessages.WrongCredentials:
-                    await Shell.Current.DisplayAlert(Resources.Texts.ApplicationMessages.Failure, Resources.Texts.ApplicationMessages.WrongCredentials, Resources.Texts.ApplicationMessages.Ok);
-                    break;
-
             }
         }
+
+        public static async Task TranslateStatusCodeToMessage(HttpStatusCode statusCode, ViewsNumerator.Exercises view)
+        {
+            switch (statusCode)
+            {
+                case HttpStatusCode.OK:
+                    if (view == ViewsNumerator.Exercises.Create)
+                        await Shell.Current.DisplayAlert(Resources.Texts.ApplicationMessages.Success, Resources.Texts.ApplicationMessages.ExerciseCreateSuccess, Resources.Texts.ApplicationMessages.Ok);
+                    else if (view == ViewsNumerator.Exercises.Delete)
+                        await Shell.Current.DisplayAlert(Resources.Texts.ApplicationMessages.Success, Resources.Texts.ApplicationMessages.ExerciseDeleteSuccess, Resources.Texts.ApplicationMessages.Ok);
+                    else if (view == ViewsNumerator.Exercises.Update)
+                        await Shell.Current.DisplayAlert(Resources.Texts.ApplicationMessages.Success, Resources.Texts.ApplicationMessages.ExerciseUpdateSuccess, Resources.Texts.ApplicationMessages.Ok);
+                    break;
+                case HttpStatusCode.Unauthorized:
+                    await Shell.Current.DisplayAlert(Resources.Texts.ApplicationMessages.Error, Resources.Texts.ApplicationMessages.Unauthorized, Resources.Texts.ApplicationMessages.Ok);
+                    break;
+                case HttpStatusCode.InternalServerError:
+                    await Shell.Current.DisplayAlert(Resources.Texts.ApplicationMessages.Error, Resources.Texts.ApplicationMessages.InternalServerError, Resources.Texts.ApplicationMessages.Ok);
+                    break;
+                case HttpStatusCode.BadRequest:
+                    await Shell.Current.DisplayAlert(Resources.Texts.ApplicationMessages.Error, Resources.Texts.ApplicationMessages.ApplicationError, Resources.Texts.ApplicationMessages.Ok);
+                    break;
+                case HttpStatusCode.NotFound:
+                    if (view == ViewsNumerator.Exercises.List)
+                        await Shell.Current.DisplayAlert(Resources.Texts.ApplicationMessages.Error, Resources.Texts.ApplicationMessages.ExercisesNotFound, Resources.Texts.ApplicationMessages.Ok);
+                    else
+                    {
+                        await Shell.Current.DisplayAlert(Resources.Texts.ApplicationMessages.Error, Resources.Texts.ApplicationMessages.ExerciseNotFound, Resources.Texts.ApplicationMessages.Ok);
+                        //TODO BodyPart not found
+                    }
+                    break;
+                case HttpStatusCode.Conflict:
+                    await Shell.Current.DisplayAlert(Resources.Texts.ApplicationMessages.Error, Resources.Texts.ApplicationMessages.ExerciseExists, Resources.Texts.ApplicationMessages.Ok);
+                    break;
+            }
+        }
+
+
+
+
     }
 }

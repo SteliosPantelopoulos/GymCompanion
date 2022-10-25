@@ -1,4 +1,5 @@
 ﻿using GymCompanion.WebServices.DAL;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,6 +10,11 @@ namespace GymCompanion.WebServices.Controllers
     public class BaseApiController : ControllerBase
     {
         protected readonly GymCompanionContext _context;
+
+        public BaseApiController()
+        {
+
+        }
 
         public BaseApiController(GymCompanionContext context)
         {

@@ -11,8 +11,8 @@ namespace GymCompanion.WebServices.Tests
         {
             User user = new User()
             {
-                Username = "SteliosPantelopoulos",
-                Password = "P@ssw0rd",
+                UserName = "SteliosPantelopoulos",
+                PasswordHash = "P@ssw0rd",
                 Email = "steliosPantelopoulos@test.com",
                 Firstname = "Ste;ios",
                 Lastname = "Testlast",

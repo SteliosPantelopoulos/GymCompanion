@@ -1,13 +1,16 @@
 ﻿using GymCompanion.Data;
-using GymCompanion.Data.Models.Account;
 using GymCompanion.Data.Models.General;
-using GymCompanion.WebServices.DAL;
-using GymCompanion.WebServices.Helpers;
+using GymCompanion.Data.ServicesModels.Account;
+using GymCompanion.Data.ServicesModels.General;
 using GymCompanion.WebServices.Models;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
+using System;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace GymCompanion.WebServices.Controllers
 {
@@ -15,298 +18,197 @@ namespace GymCompanion.WebServices.Controllers
     [ApiController]
     public class AccountController : BaseApiController
     {
-        public AccountController(GymCompanionContext context) 
-            : base(context)
+        private readonly UserManager<User> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly IConfiguration _configuration;
+
+        public AccountController(UserManager<User> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration)
         {
+            _userManager = userManager;
+            _roleManager = roleManager;
+            _configuration = configuration;
         }
 
         [HttpGet]
-        [Route("Login")]
-        public async Task<ActionResult> Login(string username, string password)
+        [Route("GetToken")]
+        public async Task<ActionResult> GetToken([FromQuery] LoginModel loginModel)
         {
-            BooleanModel model = new();
+            //TODO PASS DATA SECURE
+            TokenModel model = new();
             try
             {
-                if (await CheckCredentials(username, password))
+                User user = (User)await _userManager.FindByNameAsync(loginModel.Username);
+                bool test1 = user != null;
+                bool test2 = await _userManager.CheckPasswordAsync(user, loginModel.Password);
+                if (user != null && await _userManager.CheckPasswordAsync(user, loginModel.Password))
                 {
-                    model.Result = true;
-                    return Ok(JsonConvert.SerializeObject(model));
+                    var userRoles = await _userManager.GetRolesAsync(user);
+                    var authClaims = new List<Claim>
+                                                    {
+                                                        new Claim(ClaimTypes.Name, user.UserName),
+                                                        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                                                    };
+
+                    foreach (var userRole in userRoles)
+                        authClaims.Add(new Claim(ClaimTypes.Role, userRole));
+
+                    var token = Token(authClaims);
+
+                    object returnObject = new
+                    {
+                        token = new JwtSecurityTokenHandler().WriteToken(token),
+                        expiration = token.ValidTo
+                    };
+
+                    return Ok(returnObject);
                 }
                 else
                 {
-                    model.ApiResponseMessage = (int)Numerators.ApiResponseMessages.WrongCredentials;
-                    model.Result = false;
-                    return StatusCode(409, JsonConvert.SerializeObject(model));
+                    return StatusCode(StatusCodes.Status401Unauthorized);
                 }
+                return Unauthorized();
             }
             catch (Exception exception)
             {
-                model.ExceptionMessage = exception;
-                return StatusCode(500, JsonConvert.SerializeObject(model));
+                return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
 
         [HttpPost]
         [Route("Register")]
-        public async Task<ActionResult> Register(string username, string password, string email, string firstname, string lastname, string country, string birthday, string registrationDate)
+        public async Task<IActionResult> Register(RegisterModel registerModel)
         {
-            BooleanModel model = new();
+            //TODO PASS DATA SECURE
             try
             {
-                if(await CheckIfEmailExists(email))
-                {
-                    model.ApiResponseMessage = (int)Numerators.ApiResponseMessages.EmailIsUsed;
-                    model.Result = false;
-                    return StatusCode(409, JsonConvert.SerializeObject(model));
-                }
-                else if ( await CheckIfUsernameExists(username))
-                {
-                    model.ApiResponseMessage = (int)Numerators.ApiResponseMessages.UsernameIsUsed;
-                    model.Result = false;
-                    return StatusCode(409, JsonConvert.SerializeObject(model));
-                }
+                bool userExists = await _userManager.FindByNameAsync(registerModel.Username) != null;
+
+                if (userExists)
+                    return Conflict();
                 else
                 {
-                    User userToRegister = new User()
+                    User user = new()
                     {
-                        Username = username,
-                        Password = password,
-                        Email = email,
-                        Firstname = firstname,
-                        Lastname = lastname,
-                        Country = country,
-                        Birthday = DateTime.ParseExact(birthday, "dd/MM/yyyy", null),
-                        RegistrationDate = DateTime.ParseExact(registrationDate, "dd/MM/yyyy", null)
+                        UserName = registerModel.Username,
+                        Email = registerModel.Email,
+                        Birthday = registerModel.Birthday,
+                        Country = registerModel.Country,
+                        Firstname = registerModel.Firstname,
+                        Lastname = registerModel.Lastname,
+                        RegistrationDate = DateTime.Now,
+                        SecurityStamp = Guid.NewGuid().ToString(),
+
                     };
 
-                    await _context.Users.AddAsync(userToRegister);
-                    await _context.SaveChangesAsync();
+                    var result = await _userManager.CreateAsync(user, registerModel.Password);
 
-                    model.Result = true;
-                    return Ok(JsonConvert.SerializeObject(model));
+                    if (!result.Succeeded)
+                        return StatusCode(StatusCodes.Status500InternalServerError);
+                    else
+                        return Ok();
                 }
             }
             catch (Exception exception)
             {
-                model.ExceptionMessage = exception;
-                return StatusCode(500, JsonConvert.SerializeObject(model));
+                return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
 
         [HttpGet]
-        [Route("GetAccountInfo")]
-        public async Task<ActionResult> GetUserInfo(string username)
+        [Route("Login")]
+        public async Task<ActionResult> Login([FromQuery] LoginModel loginModel)
         {
-            GetUserInfoModel model = new();
+            //TODO PASS DATA SECURE
             try
             {
-                User userToReturn = await GetUserByUsername(username);
+                User user = (User)await _userManager.FindByNameAsync(loginModel.Username);
 
-                if(userToReturn!= null)
+                if (user != null && await _userManager.CheckPasswordAsync(user, loginModel.Password))
                 {
-                    model = new GetUserInfoModel()
+                    var userRoles = await _userManager.GetRolesAsync(user);
+                    var authClaims = new List<Claim>
+                                                    {
+                                                        new Claim(ClaimTypes.Name, user.UserName),
+                                                        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                                                    };
+
+                    foreach (var userRole in userRoles)
+                        authClaims.Add(new Claim(ClaimTypes.Role, userRole));
+
+                    var token = Token(authClaims);
+
+                    object returnObject = new
                     {
-                        UserInfo = ModelsAdapter.UserInfo(userToReturn)
+                        token = new JwtSecurityTokenHandler().WriteToken(token),
+                        expiration = token.ValidTo
                     };
 
-                    return Ok(JsonConvert.SerializeObject(model));
+                    return Ok(returnObject);
                 }
                 else
                 {
-                    model.ApiResponseMessage = (int)Numerators.ApiResponseMessages.UserNotFound;
-                    return StatusCode(409, JsonConvert.SerializeObject(model));
-                }   
-            }
-            catch (Exception exception)
-            {
-                model.ExceptionMessage = exception;
-                return StatusCode(500, JsonConvert.SerializeObject(model));
-            }
-        }
-
-        [HttpPost]
-        [Route("UpdateAccountInfo")]
-        public async Task<ActionResult> UpdateAccountInfo(string username, string newEmail, string newFirstname, string newLastname, string newCountry, string newBirthday)
-        {
-            BooleanModel model = new();
-            try
-            {
-                User userToUpdate = await GetUserByUsername(username);
-                int emailUsages = await _context.Users.CountAsync(x => x.Email == newEmail);
-
-                if (emailUsages != 0)
-                {
-                    model.ApiResponseMessage = (int)Numerators.ApiResponseMessages.EmailIsUsed;
-                    model.Result = false;
-                    return StatusCode(409, JsonConvert.SerializeObject(model));
-                }
-                else if (userToUpdate == null)
-                {
-                    model.ApiResponseMessage = (int)Numerators.ApiResponseMessages.UserNotFound;
-                    model.Result = false;
-                    return StatusCode(409, JsonConvert.SerializeObject(model));
-                }
-                else
-                {
-                    userToUpdate.Email = newEmail;
-                    userToUpdate.Firstname = newFirstname;
-                    userToUpdate.Lastname = newLastname;
-                    userToUpdate.Country = newCountry;
-                    userToUpdate.Birthday = DateTime.ParseExact(newBirthday, "dd/MM/yyyy", null);
-                    _context.Users.Update(userToUpdate);
-                    _context.SaveChanges();
-
-                    model.Result = true;
-                    return Ok(JsonConvert.SerializeObject(model));
+                    return StatusCode(StatusCodes.Status401Unauthorized);
                 }
             }
             catch (Exception exception)
             {
-                model.ExceptionMessage = exception;
-                return StatusCode(500, JsonConvert.SerializeObject(model));
+                return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
 
-        [HttpDelete]
-        [Route("DeleteAccount")]
-        public async Task<ActionResult> DeleteAccount(string username)
+
+
+
+        
+
+        //[HttpPost]
+        //[Route("register-admin")]
+        //public async Task<IActionResult> RegisterAdmin([FromBody] RegisterModel model)
+        //{
+        //    var userExists = await _userManager.FindByNameAsync(model.Username);
+        //    if (userExists != null)
+        //        return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "User already exists!" });
+
+        //    IdentityUser user = new()
+        //    {
+        //        Email = model.Email,
+        //        SecurityStamp = Guid.NewGuid().ToString(),
+        //        UserName = model.Username
+        //    };
+        //    var result = await _userManager.CreateAsync(user, model.Password);
+        //    if (!result.Succeeded)
+        //        return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "User creation failed! Please check user details and try again." });
+
+        //    if (!await _roleManager.RoleExistsAsync(UserRoles.Admin))
+        //        await _roleManager.CreateAsync(new IdentityRole(UserRoles.Admin));
+        //    if (!await _roleManager.RoleExistsAsync(UserRoles.User))
+        //        await _roleManager.CreateAsync(new IdentityRole(UserRoles.User));
+
+        //    if (await _roleManager.RoleExistsAsync(UserRoles.Admin))
+        //    {
+        //        await _userManager.AddToRoleAsync(user, UserRoles.Admin);
+        //    }
+        //    if (await _roleManager.RoleExistsAsync(UserRoles.Admin))
+        //    {
+        //        await _userManager.AddToRoleAsync(user, UserRoles.User);
+        //    }
+        //    return Ok(new Response { Status = "Success", Message = "User created successfully!" });
+        //}
+
+        private JwtSecurityToken Token(List<Claim> authClaims)
         {
-            BooleanModel model = new();
-            try
-            {
-                if(await CheckIfUsernameExists(username))
-                {
-                    User userToDelete = await GetUserByUsername(username);
-                    _context.Users.Remove(userToDelete);
-                    await _context.SaveChangesAsync();
+            var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"]));
 
-                    model.Result = true;
-                    return Ok(JsonConvert.SerializeObject(model));
-                }
-                else
-                {
-                    model.ApiResponseMessage = (int)Numerators.ApiResponseMessages.UserNotFound;
-                    model.Result = false;
-                    return StatusCode(409, JsonConvert.SerializeObject(model));
-                }
-            }
-            catch (Exception exception)
-            {
-                model.ExceptionMessage = exception;
-                return StatusCode(500, JsonConvert.SerializeObject(model));
-            }
+            var token = new JwtSecurityToken(
+                issuer: _configuration["JWT:ValidIssuer"],
+                audience: _configuration["JWT:ValidAudience"],
+                expires: DateTime.Now.AddDays(1.0),
+                claims: authClaims,
+                signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
+                );
+
+            return token;
         }
-
-        [HttpPost]
-        [Route("ChangeUsername")]
-        public async Task<ActionResult> ChangeUsername(string oldUsername, string newUsername)
-        {
-            BooleanModel model = new();
-            try
-            {
-                User userToChangeUsername = await GetUserByUsername(oldUsername);
-                int newUsernameUsages = await _context.Users.CountAsync(X => X.Username == newUsername);
-
-                if (newUsernameUsages != 0)
-                {
-                    model.ApiResponseMessage = (int)Numerators.ApiResponseMessages.UsernameIsUsed;
-                    model.Result = false;
-                    return StatusCode(409, JsonConvert.SerializeObject(model));
-                }
-                else if (userToChangeUsername == null)
-                {
-                    model.ApiResponseMessage = (int)Numerators.ApiResponseMessages.UserNotFound;
-                    model.Result = false;
-                    return StatusCode(409, JsonConvert.SerializeObject(model));
-                }
-                else
-                {
-                    userToChangeUsername.Username = newUsername;
-                    await _context.SaveChangesAsync();
-
-                    model.Result = true;
-                    return Ok(JsonConvert.SerializeObject(model));
-                }
-            }
-            catch (Exception exception)
-            {
-                model.ExceptionMessage = exception;
-                return StatusCode(500, JsonConvert.SerializeObject(model));
-            }
-        }
-
-        [HttpPost]
-        [Route("ChangePassword")]
-        public async Task<ActionResult> ChangePassword(string username, string oldPassword, string newPassword)
-        {
-            BooleanModel model = new();
-            try
-            {
-                User userToChangePassword = await GetUserByUsername(username);
-
-                if (userToChangePassword == null)
-                {
-                    model.ApiResponseMessage = (int)Numerators.ApiResponseMessages.UserNotFound;
-                    model.Result = false;
-                    return StatusCode(409, JsonConvert.SerializeObject(model));
-                }
-                else if (!await CheckCredentials(username, oldPassword))
-                {
-                    model.ApiResponseMessage = (int)Numerators.ApiResponseMessages.WrongCredentials;
-                    model.Result = false;
-                    return StatusCode(409, JsonConvert.SerializeObject(model));
-                }
-                else
-                {
-                    userToChangePassword.Password = newPassword;
-                    await _context.SaveChangesAsync();
-
-                    model.Result = true;
-                    return Ok(JsonConvert.SerializeObject(model));
-                }
-            }
-            catch (Exception exception)
-            {
-                model.ExceptionMessage = exception;
-                return StatusCode(500, JsonConvert.SerializeObject(model));
-            }
-        }
-
-        #region HelpingFunctions
-        private async Task<User> GetUserByUsername(string username)
-        {
-            User user = await _context.Users.FirstOrDefaultAsync(x => x.Username == username);
-
-            return user;
-        }
-
-        private async Task<User> GetUserByEmail(string email)
-        {
-            User user = await _context.Users.FirstOrDefaultAsync(x => x.Email == email);
-
-            return user;
-        }
-
-        private async Task<bool> CheckIfUsernameExists(string username)
-        {
-            return await GetUserByUsername(username) != null;
-        }
-
-        private async Task<bool> CheckIfEmailExists(string email)
-        {
-            return await GetUserByEmail(email) != null;
-        }
-
-        private async Task<bool> CheckCredentials(string username, string password)
-        {
-            User userToCheck = await GetUserByUsername(username);
-
-            if (userToCheck != null && userToCheck.Password == password)
-                return true;
-            else
-                return false;
-        }
-
-        #endregion
     }
 }
+

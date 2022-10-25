@@ -1,14 +1,18 @@
 ﻿using GymCompanion.App.Calls;
 using GymCompanion.Data.Models.BodyParts;
-using GymCompanion.Data.Models.General;
+using GymCompanion.Data.ServicesModels.BodyParts;
+using GymCompanion.Data.ServicesModels.General;
 using Newtonsoft.Json;
+using System.Net;
+using System.Text;
 
 namespace GymCompanion.Calls
 {
     public class BodyPartCalls
     {
-        public async Task<GetBodyPartInfoModel> GetBodyPartInfoAsync(int bodyPartId)
+        public async Task<CallsReturnModel<GetBodyPartInfoModel>> GetBodyPartInfoAsync(int bodyPartId)
         {
+            CallsReturnModel<GetBodyPartInfoModel> returnModel = new();
             string serviceUrl = "api/BodyParts/GetBodyPartInfo?";
 
             var parameters = new FormUrlEncodedContent(new Dictionary<string, string>
@@ -16,38 +20,79 @@ namespace GymCompanion.Calls
                 {"bodyPartId", bodyPartId.ToString() }
             });
 
-            string response = await ConnectionHelper.ContactWebServiceGetAsync(serviceUrl, parameters.ReadAsStringAsync().Result);
+            HttpResponseMessage response = await ConnectionHelper.ContactWebServiceGetAsync(serviceUrl, parameters.ReadAsStringAsync().Result);
 
-            return JsonConvert.DeserializeObject<GetBodyPartInfoModel>(response);
+            if (response == null)
+            {
+                returnModel.StatusCode = HttpStatusCode.BadRequest;
+                returnModel.Data = null;
+            }
+            else
+            {
+                returnModel.StatusCode = response.StatusCode;
+                if (returnModel.StatusCode == HttpStatusCode.OK)
+                    returnModel.Data = JsonConvert.DeserializeObject<GetBodyPartInfoModel>(response.Content.ReadAsStringAsync().Result);
+            }
+
+            return returnModel;
         }
 
-        public async Task<GetBodyPartsInfoModel> GetBodyPartsInfoAsync()
+        public async Task<CallsReturnModel<GetBodyPartsInfoModel>> GetBodyPartsInfoAsync()
         {
+            CallsReturnModel<GetBodyPartsInfoModel> returnModel = new();
+
             string serviceUrl = "api/BodyParts/GetBodyPartsInfo?";
 
             var parameters = new FormUrlEncodedContent(new Dictionary<string, string> { });
 
-            string response = await ConnectionHelper.ContactWebServiceGetAsync(serviceUrl, parameters.ReadAsStringAsync().Result);
+            HttpResponseMessage response = await ConnectionHelper.ContactWebServiceGetAsync(serviceUrl, parameters.ReadAsStringAsync().Result);
 
-            return JsonConvert.DeserializeObject<GetBodyPartsInfoModel>(response);
+            if (response == null)
+            {
+                returnModel.StatusCode = HttpStatusCode.BadRequest;
+                returnModel.Data = null;
+            }
+            else
+            {
+                returnModel.StatusCode = response.StatusCode;
+                if (returnModel.StatusCode == HttpStatusCode.OK)
+                    returnModel.Data = JsonConvert.DeserializeObject<GetBodyPartsInfoModel>(response.Content.ReadAsStringAsync().Result);
+            }
+
+            return returnModel;
         }
 
-        public async Task<BooleanModel> CreateBodyPartAsync(string name)
+        public async Task<CallsReturnModel<bool>> CreateBodyPartAsync(string name)
         {
+            CallsReturnModel<bool> returnModel = new();
             string serviceUrl = "api/BodyParts/CreateBodyPart?";
 
-            var parameters = new FormUrlEncodedContent(new Dictionary<string, string>
+            CreateBodyPartModel createBodyPartModel = new CreateBodyPartModel()
             {
-                {"name", name }
-            });
+                Name = name
+            };
+            var json = JsonConvert.SerializeObject(createBodyPartModel);
+            var data = new StringContent(json, Encoding.UTF8, "application/json");
+            HttpResponseMessage response = await ConnectionHelper.ContactWebServicePostAsync(serviceUrl, data);
 
-            string response = await ConnectionHelper.ContactWebServicePostAsync(serviceUrl, parameters.ReadAsStringAsync().Result);
+            if (response == null)
+            {
+                returnModel.StatusCode = HttpStatusCode.BadRequest;
+                returnModel.Data = false;
+            }
+            else
+            {
+                returnModel.StatusCode = response.StatusCode;
+                if (returnModel.StatusCode == HttpStatusCode.OK)
+                    returnModel.Data = true;
+            }
 
-            return JsonConvert.DeserializeObject<BooleanModel>(response);
+            return returnModel;
         }
 
-        public async Task<BooleanModel> DeleteBodyPartAsync(int bodyPartId)
+        public async Task<CallsReturnModel<bool>> DeleteBodyPartAsync(int bodyPartId)
         {
+            CallsReturnModel<bool> returnModel = new();
             string serviceUrl = "api/BodyParts/DeleteBodyPart?";
 
             var parameters = new FormUrlEncodedContent(new Dictionary<string, string>
@@ -55,24 +100,50 @@ namespace GymCompanion.Calls
                 {"bodyPartId", bodyPartId.ToString() }
             });
 
-            string response = await ConnectionHelper.ContactWebServiceDeleteAsync(serviceUrl, parameters.ReadAsStringAsync().Result);
+            HttpResponseMessage response = await ConnectionHelper.ContactWebServiceDeleteAsync(serviceUrl, parameters.ReadAsStringAsync().Result);
 
-            return JsonConvert.DeserializeObject<BooleanModel>(response);
+            if (response == null)
+            {
+                returnModel.StatusCode = HttpStatusCode.BadRequest;
+                returnModel.Data = false;
+            }
+            else
+            {
+                returnModel.StatusCode = response.StatusCode;
+                if (returnModel.StatusCode == HttpStatusCode.OK)
+                    returnModel.Data = true;
+            }
+
+            return returnModel;
         }
 
-        public async Task<BooleanModel> UpdateBodyPartAsync(int bodyPartId, string newName)
+        public async Task<CallsReturnModel<bool>> UpdateBodyPartAsync(int bodyPartId, string name)
         {
+            CallsReturnModel<bool> returnModel = new();
             string serviceUrl = "api/BodyParts/UpdateBodyPart?";
 
-            var parameters = new FormUrlEncodedContent(new Dictionary<string, string>
+            UpdateBodyPartModel updateBodyPartModel = new UpdateBodyPartModel()
             {
-                {"bodyPartId", bodyPartId.ToString() },
-                {"newName", newName }
-            });
+                Id = bodyPartId,
+                Name = name
+            };
+            var json = JsonConvert.SerializeObject(updateBodyPartModel);
+            var data = new StringContent(json, Encoding.UTF8, "application/json");
+            HttpResponseMessage response = await ConnectionHelper.ContactWebServicePostAsync(serviceUrl, data);
 
-            string response = await ConnectionHelper.ContactWebServicePostAsync(serviceUrl, parameters.ReadAsStringAsync().Result);
+            if (response == null)
+            {
+                returnModel.StatusCode = HttpStatusCode.BadRequest;
+                returnModel.Data = false;
+            }
+            else
+            {
+                returnModel.StatusCode = response.StatusCode;
+                if (returnModel.StatusCode == HttpStatusCode.OK)
+                    returnModel.Data = true;
+            }
 
-            return JsonConvert.DeserializeObject<BooleanModel>(response);
+            return returnModel;
         }
     }
 }

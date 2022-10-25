@@ -1,8 +1,10 @@
 ﻿using GymCompanion.Data.Models.BodyParts;
 using GymCompanion.Data.Models.Exercises;
 using GymCompanion.Data.Models.General;
+using GymCompanion.Data.ServicesModels.General;
 using GymCompanion.Helpers;
 using System.Diagnostics;
+using System.Net;
 
 namespace GymCompanion.ViewModels.Exercises
 {
@@ -36,25 +38,37 @@ namespace GymCompanion.ViewModels.Exercises
         [RelayCommand]
         public async Task<List<BodyPartModel>> GetBodyPartsAsync()
         {
-            GetBodyPartsInfoModel bodyPartsInfoModel = await bodyPartCalls.GetBodyPartsInfoAsync();
-            _BodyParts = bodyPartsInfoModel.BodyParts;
+            CallsReturnModel<GetBodyPartsInfoModel> bodyPartsInfoModel = await bodyPartCalls.GetBodyPartsInfoAsync();
 
-            return bodyPartsInfoModel.BodyParts;
+            if (bodyPartsInfoModel.Data != null)
+                _BodyParts = bodyPartsInfoModel.Data.BodyParts;
+
+            return _BodyParts;
         }
 
         [RelayCommand]
         public async Task<BodyPartModel> GetSelectedBodyPartAsync()
         {
-            GetBodyPartInfoModel bodyPartInfoModel = await bodyPartCalls.GetBodyPartInfoAsync(_ExerciseModel.BodyPartId);
-            _SelectedBodyPart = bodyPartInfoModel.BodyPart;
+            //TODO CHECK THE NULL RETURN
+            CallsReturnModel<GetBodyPartInfoModel> model = await bodyPartCalls.GetBodyPartInfoAsync(_ExerciseModel.BodyPartId);
+            await ApiResponseMessagesInitializer.TranslateStatusCodeToMessage(model.StatusCode, ViewsNumerator.BodyParts.Details);
 
-            return bodyPartInfoModel.BodyPart;
+            if (model.StatusCode == HttpStatusCode.OK)
+            {
+                _SelectedBodyPart = model.Data.BodyPart;
+                return model.Data.BodyPart;
+            }
+            else
+            {
+                _SelectedBodyPart = null;
+                return null;
+            }
         }
 
         [RelayCommand]
         async Task UpdateExerciseAsync()
         {
-            if(SelectedBodyPart == null)
+            if (SelectedBodyPart == null)
                 Task.Run(async () => { this.SelectedBodyPart = await GetSelectedBodyPartAsync(); }).Wait();
 
             if (IsBusy)
@@ -63,19 +77,9 @@ namespace GymCompanion.ViewModels.Exercises
             try
             {
                 IsBusy = true;
-                BooleanModel model = await exerciseCalls.UpdateExerciseAsync(_ExerciseModel.Id, _ExerciseModel.Name, _SelectedBodyPart.Id, _ExerciseModel.Description);
+                CallsReturnModel<bool> model = await exerciseCalls.UpdateExerciseAsync(_ExerciseModel.Id, _ExerciseModel.Name, _SelectedBodyPart.Id, _ExerciseModel.Description);
+                await ApiResponseMessagesInitializer.TranslateStatusCodeToMessage(model.StatusCode, ViewsNumerator.Exercises.Update);
 
-                if (model.Result == true)
-                {
-                    await Shell.Current.DisplayAlert(Resources.Texts.ApplicationMessages.Success, Resources.Texts.ApplicationMessages.ExerciseUpdateSuccess, Resources.Texts.ApplicationMessages.Ok);
-                }
-                else
-                {
-                    if (model.ExceptionMessage != null)
-                        await Shell.Current.DisplayAlert(Resources.Texts.ApplicationMessages.Error, Resources.Texts.ApplicationMessages.InternalServerError, Resources.Texts.ApplicationMessages.Ok);
-                    else
-                        await ApiResponseMessagesInitializer.ShowMessage(model.ApiResponseMessage);
-                }
             }
             catch (Exception exception)
             {

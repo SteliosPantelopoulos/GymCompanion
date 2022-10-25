@@ -88,6 +88,15 @@ namespace GymCompanion.Resources.Texts {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Body part already exists..
+        /// </summary>
+        internal static string BodyPartExists {
+            get {
+                return ResourceManager.GetString("BodyPartExists", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Body part name is used..
         /// </summary>
         internal static string BodyPartNameIsUsed {
@@ -160,6 +169,15 @@ namespace GymCompanion.Resources.Texts {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Exercise already exists..
+        /// </summary>
+        internal static string ExerciseExists {
+            get {
+                return ResourceManager.GetString("ExerciseExists", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Exercise name is used..
         /// </summary>
         internal static string ExerciseNameIsUsed {
@@ -228,6 +246,15 @@ namespace GymCompanion.Resources.Texts {
         internal static string Success {
             get {
                 return ResourceManager.GetString("Success", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unauthorized request.
+        /// </summary>
+        internal static string Unauthorized {
+            get {
+                return ResourceManager.GetString("Unauthorized", resourceCulture);
             }
         }
         

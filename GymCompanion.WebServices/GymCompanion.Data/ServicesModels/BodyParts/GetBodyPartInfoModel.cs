@@ -2,7 +2,7 @@
 
 namespace GymCompanion.Data.Models.BodyParts
 {
-    public class GetBodyPartInfoModel : BaseModel
+    public class GetBodyPartInfoModel
     {
         public BodyPartModel BodyPart { get; set; }
     }

@@ -81,21 +81,21 @@ public partial class ExercisesFormPartialPage : ContentPage
 
     private void SetSubmitButtonStyle()
     {
-        if(ViewCallFrom == (int)ViewsNumerator.Exercises.Create)
+        if (ViewCallFrom == (int)ViewsNumerator.Exercises.Create)
         {
             if (nameEntryCompleted && bodyPartPickerCompleted && descriptionEntryCompleted)
                 CreateButton.Style = (Style)ResourcesHelper.FindResource("ButtonEnabled");
             else
                 CreateButton.Style = (Style)ResourcesHelper.FindResource("ButtonDisabled");
         }
-        else if(ViewCallFrom == (int)ViewsNumerator.Exercises.Details)
+        else if (ViewCallFrom == (int)ViewsNumerator.Exercises.Details)
         {
             if (nameEntryCompleted && bodyPartPickerCompleted && descriptionEntryCompleted)
                 UpdateButton.Style = (Style)ResourcesHelper.FindResource("ButtonEnabled");
             else
                 UpdateButton.Style = (Style)ResourcesHelper.FindResource("ButtonDisabled");
         }
-        
+
     }
 
 

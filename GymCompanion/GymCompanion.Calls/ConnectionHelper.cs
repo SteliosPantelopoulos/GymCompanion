@@ -1,9 +1,8 @@
-﻿using GymCompanion.Calls;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Net.Http.Json;
+using System.Net.Http.Headers;
+using System.Security.Principal;
 
 namespace GymCompanion.App.Calls
 {
@@ -17,68 +16,84 @@ namespace GymCompanion.App.Calls
         #endif
 
         private static HttpClient client = new HttpClient();
-        
+
 
         private static async Task<string> GetToken(string username, string password)
         {
-            using (var client = new HttpClient())
-            {
-                client.BaseAddress = new Uri("https://localhost:7080/api/");
-
-                var context = new FormUrlEncodedContent(new[]
-                {
-                    new KeyValuePair<string, string>("grant_type", "password"),
-                    new KeyValuePair<string, string>("username", username),
-                    new KeyValuePair<string, string>("password", password)
-
-                });
-
-                var response = client.PostAsync("Token", context);
-
-                var jsonResult = JsonConvert.DeserializeObject<Dictionary<string, string>>(response.Result.Content.ReadAsStringAsync().Result);
-
-                return jsonResult["access_token"];
-
-            }
-        }
-
-        public static async Task<string> ContactWebServiceGetAsync(string serviceUrl, string parameters = "")
-        {
-            /*client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", System.Web.HttpContext.Current.Session["WebServiceToken"].ToString());*/
-            /*client.BaseAddress = new Uri("http://localhost:7080/api/");*/
+            string serviceUrl = String.Format("Account/GetToken?username={0}&password={1}", username, password);
             try
             {
-                var response = await client.GetAsync(Base + serviceUrl + parameters);
+                var response = await client.GetAsync("http://localhost:7080/api/Account/GetToken?username=stpant&password=P@ssw0rd");
+
                 return response.Content.ReadAsStringAsync().Result;
             }
-            catch (Exception ex)
+            catch (Exception exception )
             {
                 return "";
-                throw;
             }
-            
+            //using (var client = new HttpClient())
+            //{
 
-            
+            //    var context = new FormUrlEncodedContent(new[]
+            //    {
+            //        //new KeyValuePair<string, string>("grant_type", "password"),
+            //        new KeyValuePair<string, string>("username", username),
+            //        new KeyValuePair<string, string>("password", password)
+
+            //    });
+
+            //    var response = await client.GetAsync(Base + "Account/GetToken?username=stpant&password=P@ssw0rd");
+
+            //    var jsonResult = JsonConvert.DeserializeObject<Dictionary<string, string>>(response.Result.Content.ReadAsStringAsync().Result);
+
+            //    return jsonResult["access_token"];
+            //}
         }
 
-        public static async Task<string> ContactWebServicePostAsync(string serviceUrl, string parameters = "")
+        public static async Task<HttpResponseMessage> ContactWebServiceGetAsync(string serviceUrl, string parameters = "")
         {
-            /*client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", System.Web.HttpContext.Current.Session["WebServiceToken"].ToString());*/
-            /*client.BaseAddress = new Uri("https://localhost:7080/api/");*/
+            try
+            {
+                dynamic data = JObject.Parse((await GetToken("stpant", "P@ssw0rd")).ToString());
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", data.token.ToString());
+                var response = await client.GetAsync(Base + serviceUrl + parameters);
 
-            var response = await client.PostAsync(Base + serviceUrl + parameters, null);
-
-            return response.Content.ReadAsStringAsync().Result;
+                return response;
+            }
+            catch (Exception exception)
+            {
+                return null;
+            }
         }
 
-        public static async Task<string> ContactWebServiceDeleteAsync(string serviceUrl, string parameters = "")
+        public static async Task<HttpResponseMessage> ContactWebServicePostAsync(string serviceUrl, HttpContent content = null)
         {
-            /*client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", System.Web.HttpContext.Current.Session["WebServiceToken"].ToString());*/
-            /*client.BaseAddress = new Uri("https://localhost:7080/api/");*/
+            try
+            {
+                dynamic data = JObject.Parse((await GetToken("stpant", "P@ssw0rd")).ToString());
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", data.token.ToString());
+                var response = await client.PostAsync(Base + serviceUrl, content);
+                return response;
+            }
+            catch (Exception exception)
+            {
+                return null;
+            } 
+        }
 
-            var response = await client.DeleteAsync(Base + serviceUrl + parameters);
-
-            return response.Content.ReadAsStringAsync().Result;
+        public static async Task<HttpResponseMessage> ContactWebServiceDeleteAsync(string serviceUrl, string parameters = "")
+        {
+            try
+            {
+                dynamic data = JObject.Parse((await GetToken("stpant", "P@ssw0rd")).ToString());
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", data.token.ToString());
+                var response = await client.DeleteAsync(Base + serviceUrl + parameters);
+                return response;
+            }
+            catch (Exception exception)
+            {
+                return null;
+            }
         }
     }
 }

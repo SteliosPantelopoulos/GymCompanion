@@ -126,6 +126,9 @@
   <data name="BodyPartDeleteSuccess" xml:space="preserve">
     <value>Body part was successfully deleted!</value>
   </data>
+  <data name="BodyPartExists" xml:space="preserve">
+    <value>Body part already exists.</value>
+  </data>
   <data name="BodyPartNameIsUsed" xml:space="preserve">
     <value>Body part name is used.</value>
   </data>
@@ -150,6 +153,9 @@
   <data name="ExerciseDeleteSuccess" xml:space="preserve">
     <value>Exercise was successfully deleted!</value>
   </data>
+  <data name="ExerciseExists" xml:space="preserve">
+    <value>Exercise already exists.</value>
+  </data>
   <data name="ExerciseNameIsUsed" xml:space="preserve">
     <value>Exercise name is used.</value>
   </data>
@@ -173,6 +179,9 @@
   </data>
   <data name="Success" xml:space="preserve">
     <value>Success</value>
+  </data>
+  <data name="Unauthorized" xml:space="preserve">
+    <value>Unauthorized request</value>
   </data>
   <data name="UsernameIsUsed" xml:space="preserve">
     <value />

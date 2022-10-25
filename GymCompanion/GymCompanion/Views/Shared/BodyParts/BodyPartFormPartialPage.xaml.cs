@@ -12,7 +12,7 @@ public partial class BodyPartFormPartialPage : ContentView
     public BodyPartFormPartialPage(int caller)
 	{
         InitializeComponent();
-
+        //todo changed
         if (caller == (int)ViewsNumerator.BodyParts.Create)
         {
             CreateButton.IsVisible = true;

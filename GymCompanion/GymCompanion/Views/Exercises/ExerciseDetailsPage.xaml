@@ -11,7 +11,7 @@
     <VerticalStackLayout>
         <PartialView:ExercisesFormPartialPage>
             <x:Arguments>
-                <x:Int32>2</x:Int32>
+                <x:Int32>4</x:Int32>
             </x:Arguments>
         </PartialView:ExercisesFormPartialPage>
     </VerticalStackLayout>

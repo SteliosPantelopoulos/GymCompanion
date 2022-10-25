@@ -3,7 +3,6 @@ using GymCompanion.Data.Models.Exercises;
 using GymCompanion.Data.ServicesModels.Account;
 using GymCompanion.Data.ServicesModels.Workouts;
 using GymCompanion.WebServices.Models;
-using Microsoft.EntityFrameworkCore;
 
 namespace GymCompanion.WebServices.Helpers
 {
@@ -16,9 +15,9 @@ namespace GymCompanion.WebServices.Helpers
         {
             UserInfoModel userInfoModel = new()
             {
-                Username = user.Username,
+                Username = user.UserName,
                 Email = user.Email,
-                Password = user.Password,
+                Password = user.PasswordHash,
                 Firstname = user.Firstname,
                 Lastname = user.Lastname,
                 Country = user.Country,

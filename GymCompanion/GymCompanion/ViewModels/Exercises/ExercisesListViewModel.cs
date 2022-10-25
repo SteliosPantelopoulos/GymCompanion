@@ -1,8 +1,11 @@
-﻿using GymCompanion.Data.Models.Exercises;
+﻿using GymCompanion.Data.Models.BodyParts;
+using GymCompanion.Data.Models.Exercises;
 using GymCompanion.Data.Models.General;
+using GymCompanion.Data.ServicesModels.General;
 using GymCompanion.Helpers;
 using GymCompanion.Views.Exercises;
 using System.Diagnostics;
+using System.Net;
 
 namespace GymCompanion.ViewModels.Exercises
 {
@@ -34,20 +37,11 @@ namespace GymCompanion.ViewModels.Exercises
         [RelayCommand]
         async Task GoToCreateAsync()
         {
-            try
-            {
-              await Shell.Current.GoToAsync($"{nameof(ExerciseCreatePage)}", true,
-               new Dictionary<string, object>
-               {
+            await Shell.Current.GoToAsync($"{nameof(ExerciseCreatePage)}", true,
+                 new Dictionary<string, object>
+                 {
                     {nameof(ExerciseModel), new ExerciseModel() }
-               });
-            }
-            catch (Exception ex)
-            {
-
-                throw;
-            }
-           
+                 });
         }
 
         [RelayCommand]
@@ -59,18 +53,21 @@ namespace GymCompanion.ViewModels.Exercises
             try
             {
                 IsBusy = true;
-                GetExercisesInfoModel model = await exercisesCall.GetExercisesInfoAsync();
 
                 if (Exercises.Count != 0)
                     Exercises.Clear();
 
-                foreach (ExerciseModel exercise in model.Exercises)
-                    Exercises.Add(exercise);
+                CallsReturnModel<GetExercisesInfoModel> model = await exercisesCall.GetExercisesInfoAsync();
+                await ApiResponseMessagesInitializer.TranslateStatusCodeToMessage(model.StatusCode, ViewsNumerator.Exercises.List);
+
+                if (model.StatusCode == HttpStatusCode.OK)
+                    foreach (ExerciseModel exercise in model.Data.Exercises)
+                        Exercises.Add(exercise);
             }
             catch (Exception exception)
             {
-                /*Debug.WriteLine(exception);*/
-                await Shell.Current.DisplayAlert("Error", "unable to get exercises", "Ok");
+                Debug.WriteLine(exception);
+                await Shell.Current.DisplayAlert(Resources.Texts.ApplicationMessages.Error, Resources.Texts.ApplicationMessages.ApplicationError, Resources.Texts.ApplicationMessages.Ok);
             }
             finally
             {
@@ -87,19 +84,8 @@ namespace GymCompanion.ViewModels.Exercises
             try
             {
                 IsBusy = true;
-                BooleanModel model =  await exercisesCall.DeleteExerciseAsync(exercise.Id);
-
-                if (model.Result == true)
-                {
-                    await Shell.Current.DisplayAlert(Resources.Texts.ApplicationMessages.Success, Resources.Texts.ApplicationMessages.ExerciseDeleteSuccess, Resources.Texts.ApplicationMessages.Ok);
-                }
-                else
-                {
-                    if (model.ExceptionMessage != null)
-                        await Shell.Current.DisplayAlert(Resources.Texts.ApplicationMessages.Error, Resources.Texts.ApplicationMessages.InternalServerError, Resources.Texts.ApplicationMessages.Ok);
-                    else
-                        await ApiResponseMessagesInitializer.ShowMessage(model.ApiResponseMessage);
-                }
+                CallsReturnModel<bool> model = await exercisesCall.DeleteExerciseAsync(exercise.Id);
+                await ApiResponseMessagesInitializer.TranslateStatusCodeToMessage(model.StatusCode, ViewsNumerator.Exercises.Delete);
             }
             catch (Exception exception)
             {

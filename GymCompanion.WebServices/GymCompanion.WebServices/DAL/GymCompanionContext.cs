@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using GymCompanion.WebServices.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace GymCompanion.WebServices.DAL
 {
-    public partial class GymCompanionContext : DbContext
+    public partial class GymCompanionContext : IdentityDbContext<User>
     {
         public GymCompanionContext()
         {
@@ -35,6 +36,7 @@ namespace GymCompanion.WebServices.DAL
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            base.OnModelCreating(modelBuilder);
             modelBuilder.Entity<BodyPart>(entity =>
             {
                 entity.HasKey(e => e.Id)
@@ -87,59 +89,6 @@ namespace GymCompanion.WebServices.DAL
 
                 entity.HasMany(w => w.Exercises)
                     .WithMany(p => p.Workouts);
-            });
-
-            modelBuilder.Entity<User>(entity =>
-            {
-                entity.HasKey(e => e.Id)
-                    .HasName("PK_UserId");
-
-                entity.Property(e => e.Id).ValueGeneratedOnAdd();
-
-                entity.HasIndex(e => e.Email, "User_Email_Unique")
-                    .IsUnique();
-
-                entity.HasIndex(e => e.Username, "User_Username_Unique")
-                    .IsUnique();
-
-                entity.Property(e => e.Birthday).HasColumnType("datetime");
-
-                entity.Property(e => e.Country)
-                    .HasMaxLength(50)
-                    .IsUnicode(false);
-
-                entity.Property(e => e.Email)
-                    .HasMaxLength(50)
-                    .IsUnicode(false);
-
-                entity.Property(e => e.Firstname)
-                    .HasMaxLength(50)
-                    .IsUnicode(false);
-
-                entity.Property(e => e.Lastname)
-                    .HasMaxLength(50)
-                    .IsUnicode(false);
-
-                entity.Property(e => e.Password)
-                    .HasMaxLength(50)
-                    .IsUnicode(false);
-
-                entity.Property(e => e.RegistrationDate).HasColumnType("datetime");
-
-                entity.Property(e => e.Username)
-                    .HasMaxLength(50)
-                    .IsUnicode(false);
-
-                entity.HasMany<Workout>(u => u.Workouts)
-                    .WithOne(w => w.User)
-                    .HasForeignKey(w => w.UserId)
-                    .OnDelete(DeleteBehavior.ClientSetNull);
-
-                entity.HasMany<UserExercise>(u => u.UserExercises)
-                    .WithOne(ue => ue.User)
-                    .HasForeignKey(ue => ue.UserId)
-                    .OnDelete(DeleteBehavior.ClientSetNull);
-
             });
 
             modelBuilder.Entity<Set>(entity =>

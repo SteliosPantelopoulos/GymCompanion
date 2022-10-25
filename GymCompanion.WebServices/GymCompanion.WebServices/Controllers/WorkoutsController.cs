@@ -1,16 +1,15 @@
-﻿using GymCompanion.Data;
-using GymCompanion.Data.Models.Exercises;
-using GymCompanion.Data.Models.Workouts;
-using GymCompanion.Data.ServicesModels.Workouts;
+﻿using GymCompanion.Data.Models.Workouts;
 using GymCompanion.WebServices.DAL;
 using GymCompanion.WebServices.Helpers;
 using GymCompanion.WebServices.Models;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace GymCompanion.WebServices.Controllers
 {
+
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class WorkoutsController : BaseApiController
@@ -22,18 +21,18 @@ namespace GymCompanion.WebServices.Controllers
 
         [Route("GetUserWorkouts")]
         [HttpGet]
-        public async Task<ActionResult> GetUserWorkouts(int userId)
+        public async Task<ActionResult> GetUserWorkouts(string userId)
         {
             try
             {
                 User user = await _context.Users.FirstOrDefaultAsync(x => x.Id == userId);
 
                 if (user == null)
-                    return StatusCode(409, Numerators.ApiResponseMessages.UserNotFound);
+                    return NotFound();
                 else
                 {
                     List<Workout> workoutsToReturn = await _context.Workouts.Where(x => x.UserId == user.Id).ToListAsync();
-                    
+
                     Dictionary<int, List<Exercise>> exercisesValuePairs = new();
                     foreach (Workout workout in workoutsToReturn)
                     {
@@ -47,17 +46,17 @@ namespace GymCompanion.WebServices.Controllers
                     };
 
                     return Ok(model);
-                }   
+                }
             }
             catch (Exception exception)
             {
-                return StatusCode(500, exception);
+                return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
 
         [Route("CreateUserWorkout")]
         [HttpPost]
-        public async Task<ActionResult> CreateUserWorkout(string name, int userId, double time, DateTime date, string exercises)
+        public async Task<ActionResult> CreateUserWorkout(string name, string userId, double time, DateTime date, string exercises)
         {
             try
             {
@@ -66,7 +65,7 @@ namespace GymCompanion.WebServices.Controllers
                 User user = await _context.Users.FirstOrDefaultAsync(x => x.Id == userId);
 
                 if (user == null)
-                    return StatusCode(409, Numerators.ApiResponseMessages.UserNotFound);
+                    return NotFound();
                 else
                 {
                     List<Exercise> exercisesToAdd = new();
@@ -78,7 +77,7 @@ namespace GymCompanion.WebServices.Controllers
                         if (exercise != null)
                             exercisesToAdd.Add(exercise);
                         else
-                            return StatusCode(409, Numerators.ApiResponseMessages.ExerciseNotFound);
+                            return StatusCode(StatusCodes.Status424FailedDependency);
                     }
 
                     Workout workout = new()
@@ -93,12 +92,12 @@ namespace GymCompanion.WebServices.Controllers
                     await _context.Workouts.AddAsync(workout);
                     await _context.SaveChangesAsync();
 
-                    return Ok(true);
+                    return Ok();
                 }
             }
             catch (Exception exception)
             {
-                return StatusCode(500, exception);
+                return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
 
@@ -111,18 +110,18 @@ namespace GymCompanion.WebServices.Controllers
                 Workout workoutToDelete = await _context.Workouts.FirstOrDefaultAsync(x => x.Id == workoutId);
 
                 if (workoutToDelete == null)
-                    return StatusCode(409, Numerators.ApiResponseMessages.WorkoutNotFound);
+                    return NotFound();
                 else
                 {
                     _context.Workouts.Remove(workoutToDelete);
                     await _context.SaveChangesAsync();
 
-                    return Ok(true);
+                    return Ok();
                 }
             }
             catch (Exception exception)
             {
-                return StatusCode(500, exception);
+                return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
     }

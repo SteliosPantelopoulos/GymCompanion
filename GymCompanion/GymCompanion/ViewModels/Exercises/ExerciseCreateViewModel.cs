@@ -1,7 +1,6 @@
-﻿using GymCompanion.Calls;
-using GymCompanion.Data.Models.BodyParts;
+﻿using GymCompanion.Data.Models.BodyParts;
 using GymCompanion.Data.Models.Exercises;
-using GymCompanion.Data.Models.General;
+using GymCompanion.Data.ServicesModels.General;
 using GymCompanion.Helpers;
 using System.Diagnostics;
 
@@ -36,10 +35,12 @@ namespace GymCompanion.ViewModels.Exercises
         [RelayCommand]
         public async Task<List<BodyPartModel>> GetBodyPartsAsync()
         {
-            GetBodyPartsInfoModel bodyPartsInfoModel = await bodyPartCalls.GetBodyPartsInfoAsync();
-            _BodyParts = bodyPartsInfoModel.BodyParts;
+            CallsReturnModel<GetBodyPartsInfoModel> bodyPartsInfoModel = await bodyPartCalls.GetBodyPartsInfoAsync();
 
-            return bodyPartsInfoModel.BodyParts;
+            if (bodyPartsInfoModel.Data != null)
+                _BodyParts = bodyPartsInfoModel.Data.BodyParts;
+
+            return _BodyParts;
         }
 
         [RelayCommand]
@@ -51,19 +52,9 @@ namespace GymCompanion.ViewModels.Exercises
             try
             {
                 IsBusy = true;
-                BooleanModel model = await exerciseCalls.CreateExerciseAsync(_ExerciseModel.Name, _SelectedBodyPart.Id, _ExerciseModel.Description);
+                CallsReturnModel<bool> model = await exerciseCalls.CreateExerciseAsync(_ExerciseModel.Name, _SelectedBodyPart.Id, _ExerciseModel.Description);
+                await ApiResponseMessagesInitializer.TranslateStatusCodeToMessage(model.StatusCode, ViewsNumerator.Exercises.Create);
 
-                if (model.Result == true)
-                {
-                    await Shell.Current.DisplayAlert(Resources.Texts.ApplicationMessages.Success, Resources.Texts.ApplicationMessages.ExerciseCreateSuccess, Resources.Texts.ApplicationMessages.Ok);
-                }
-                else
-                {
-                    if (model.ExceptionMessage != null)
-                        await Shell.Current.DisplayAlert(Resources.Texts.ApplicationMessages.Error, Resources.Texts.ApplicationMessages.InternalServerError, Resources.Texts.ApplicationMessages.Ok);
-                    else
-                        await ApiResponseMessagesInitializer.ShowMessage(model.ApiResponseMessage);
-                }
             }
             catch (Exception exception)
             {

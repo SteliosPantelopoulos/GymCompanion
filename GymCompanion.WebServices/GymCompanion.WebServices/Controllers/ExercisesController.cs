@@ -1,16 +1,17 @@
-﻿using GymCompanion.Data;
-using GymCompanion.Data.Models.Exercises;
-using GymCompanion.Data.Models.General;
+﻿using GymCompanion.Data.Models.Exercises;
+using GymCompanion.Data.ServicesModels.Exercises;
 using GymCompanion.WebServices.DAL;
 using GymCompanion.WebServices.Helpers;
 using GymCompanion.WebServices.Models;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
+using System.Xml.Linq;
 
 namespace GymCompanion.WebServices.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class ExercisesController : BaseApiController
@@ -29,23 +30,21 @@ namespace GymCompanion.WebServices.Controllers
             {
                 Exercise exerciseToReturn = await _context.Exercises.FirstOrDefaultAsync(x => x.Id == exerciseId);
 
-                if (exerciseToReturn == null)
+                if (exerciseToReturn != null)
                 {
-                    model.ApiResponseMessage = (int)Numerators.ApiResponseMessages.ExerciseNotFound;
-                    return StatusCode(409, JsonConvert.SerializeObject(model));
+                    model.Exercise = ModelsAdapter.Exercise(exerciseToReturn);
+                    return Ok(JsonConvert.SerializeObject(model));
+                    
                 }
                 else
                 {
-                    model.Exercise = ModelsAdapter.Exercise(exerciseToReturn);
-
-                    return Ok(JsonConvert.SerializeObject(model));
+                    return NotFound();
                 }
 
             }
             catch (Exception exception)
             {
-                model.ExceptionMessage = exception;
-                return StatusCode(500, JsonConvert.SerializeObject(model));
+                return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
 
@@ -56,14 +55,9 @@ namespace GymCompanion.WebServices.Controllers
             GetExercisesInfoModel model = new();
             try
             {
-                List<Exercise> exercisesToReturn = await _context.Exercises.ToListAsync();
+                List<Exercise> exercisesToReturn = await _context.Exercises.OrderBy(x => x.Name).ToListAsync();
 
-                if (exercisesToReturn == null)
-                {
-                    model.ApiResponseMessage = (int)Numerators.ApiResponseMessages.ExercisesNotFound;
-                    return StatusCode(409, JsonConvert.SerializeObject(model));
-                }
-                else
+                if (exercisesToReturn != null)
                 {
                     model = new GetExercisesInfoModel()
                     {
@@ -72,57 +66,55 @@ namespace GymCompanion.WebServices.Controllers
 
                     return Ok(JsonConvert.SerializeObject(model));
                 }
+                else
+                {
+                    return NotFound();
+                }
             }
             catch (Exception exception)
             {
-                model.ExceptionMessage = exception;
-                return StatusCode(500, JsonConvert.SerializeObject(model));
+                return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
 
         [Route("CreateExercise")]
         [HttpPost]
-        public async Task<ActionResult> CreateExercise(string name, int bodyPartId, string description)
+        public async Task<ActionResult> CreateExercise([FromBody] CreateExerciseModel model)
         {
-            BooleanModel model = new();
             try
             {
-                BodyPart bodyPart = await _context.BodyParts.FirstOrDefaultAsync(x => x.Id == bodyPartId);
+                BodyPart bodyPart = await _context.BodyParts.FirstOrDefaultAsync(x => x.Id == model.BodyPartId);
                 if (bodyPart != null)
                 {
-                    bool exerciseExists = await _context.Exercises.CountAsync(x => x.Name == name) != 0;
+                    bool exerciseExists = await _context.Exercises.CountAsync(x => x.Name == model.Name) != 0;
 
-                    if (!exerciseExists)
+                    if (exerciseExists)
+                    {
+                        return Conflict();
+                    }
+                    else
                     {
                         Exercise exerciseToAdd = new Exercise()
                         {
-                            Name = name,
+                            Name = model.Name,
                             BodyPartId = bodyPart.Id,
-                            Description = description
+                            Description = model.Description
                         };
 
                         await _context.Exercises.AddAsync(exerciseToAdd);
                         await _context.SaveChangesAsync();
 
-                        model.Result = true;
-                        return Ok(JsonConvert.SerializeObject(model));
-                    }
-                    else
-                    {
-                        model.ApiResponseMessage = (int)Numerators.ApiResponseMessages.ExerciseNameIsUsed;
-                        return StatusCode(409, JsonConvert.SerializeObject(model));
+                        return Ok();
                     }
                 }
                 else
                 {
-                    model.ApiResponseMessage = (int)Numerators.ApiResponseMessages.BodyPartNotFound;
-                    return StatusCode(409, JsonConvert.SerializeObject(model));
+                    return NotFound();
                 }
             }
             catch (Exception exception)
             {
-                model.ExceptionMessage = exception;
-                return StatusCode(500, JsonConvert.SerializeObject(model));
+                return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
 
@@ -130,7 +122,6 @@ namespace GymCompanion.WebServices.Controllers
         [HttpDelete]
         public async Task<ActionResult> DeleteExercise(int exerciseId)
         {
-            BooleanModel model = new();
             try
             {
                 Exercise exerciseToDelete = await _context.Exercises.FirstOrDefaultAsync(x => x.Id == exerciseId);
@@ -140,63 +131,48 @@ namespace GymCompanion.WebServices.Controllers
                     _context.Exercises.Remove(exerciseToDelete);
                     await _context.SaveChangesAsync();
 
-                    model.Result = true;
-                    return Ok(JsonConvert.SerializeObject(model));
+                    return Ok();
                 }
                 else
                 {
-                    model.ApiResponseMessage = (int)Numerators.ApiResponseMessages.ExerciseNotFound;
-                    return StatusCode(409, JsonConvert.SerializeObject(model));
+                    return NotFound();
                 }
             }
             catch (Exception exception)
             {
-                model.ExceptionMessage = exception;
-                return StatusCode(500, JsonConvert.SerializeObject(model));
+                return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
 
         [Route("UpdateExercise")]
         [HttpPost]
-        public async Task<ActionResult> UpdateExercise(int exerciseId, string newExerciseName, int newBodyPartId, string newDescription)
+        public async Task<ActionResult> UpdateExercise([FromBody] UpdateExerciseModel model)
         {
-            BooleanModel model = new();
             try
             {
-                Exercise exerciseToUpdate = await _context.Exercises.FirstOrDefaultAsync(x => x.Id == exerciseId);
-                BodyPart bodyPart = await _context.BodyParts.FirstOrDefaultAsync(x => x.Id == newBodyPartId);
-                bool exerciseNameExists = await _context.Exercises.CountAsync(x => x.Name == newExerciseName) != 0 && newExerciseName != exerciseToUpdate.Name;
+                Exercise exerciseToUpdate = await _context.Exercises.FirstOrDefaultAsync(x => x.Id == model.Id);
+                BodyPart bodyPart = await _context.BodyParts.FirstOrDefaultAsync(x => x.Id == model.BodyPartId);
+                bool exerciseNameExists = await _context.Exercises.CountAsync(x => x.Name == model.Name) != 0 && model.Name != exerciseToUpdate.Name;
 
                 if (exerciseToUpdate == null)
-                {
-                    model.ApiResponseMessage = (int)Numerators.ApiResponseMessages.ExerciseNotFound;
-                    return StatusCode(409, JsonConvert.SerializeObject(model));
-                }
+                    return NotFound("exercise");
                 else if (bodyPart == null)
-                {
-                    model.ApiResponseMessage = (int)Numerators.ApiResponseMessages.BodyPartNotFound;
-                    return StatusCode(409, JsonConvert.SerializeObject(model));
-                }
+                    return NotFound("bodyPart");
                 else if (exerciseNameExists)
-                {
-                    model.ApiResponseMessage = (int)Numerators.ApiResponseMessages.ExerciseNameIsUsed;
-                    return StatusCode(409, JsonConvert.SerializeObject(model));
-                }
+                    return Conflict();
                 else
                 {
-                    exerciseToUpdate.Name = newExerciseName;
+                    exerciseToUpdate.Name = model.Name;
                     exerciseToUpdate.BodyPartId = bodyPart.Id;
-                    exerciseToUpdate.Description = newDescription;
+                    exerciseToUpdate.Description = model.Description;
                     await _context.SaveChangesAsync();
 
-                    model.Result = true;
-                    return Ok(JsonConvert.SerializeObject(model));
+                    return Ok();
                 }
             }
             catch (Exception exception)
             {
-                model.ExceptionMessage = exception;
-                return StatusCode(500, JsonConvert.SerializeObject(model));
+                return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
     }

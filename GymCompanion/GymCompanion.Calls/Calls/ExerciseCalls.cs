@@ -1,14 +1,22 @@
 ﻿using GymCompanion.App.Calls;
+using GymCompanion.Data.Models.BodyParts;
 using GymCompanion.Data.Models.Exercises;
 using GymCompanion.Data.Models.General;
+using GymCompanion.Data.ServicesModels.BodyParts;
+using GymCompanion.Data.ServicesModels.Exercises;
+using GymCompanion.Data.ServicesModels.General;
 using Newtonsoft.Json;
+using System.Net;
+using System.Text;
+using System.Xml.Linq;
 
 namespace GymCompanion.Calls
 {
     public class ExerciseCalls
     {
-        public async Task<GetExerciseInfoModel> GetExerciseInfoAsync(string exerciseId)
+        public async Task<CallsReturnModel<GetExerciseInfoModel>> GetExerciseInfoAsync(string exerciseId)
         {
+            CallsReturnModel<GetExerciseInfoModel> returnModel = new();
             string serviceUrl = "api/Exercises/GetExerciseInfo?";
 
             var parameters = new FormUrlEncodedContent(new Dictionary<string, string>
@@ -16,67 +24,134 @@ namespace GymCompanion.Calls
                 {"exerciseId", exerciseId }
             });
 
-            var response = await ConnectionHelper.ContactWebServiceGetAsync(serviceUrl, parameters.ReadAsStringAsync().Result);
+            HttpResponseMessage response = await ConnectionHelper.ContactWebServiceGetAsync(serviceUrl, parameters.ReadAsStringAsync().Result);
 
-            return JsonConvert.DeserializeObject<GetExerciseInfoModel>(response);
+            if (response == null)
+            {
+                returnModel.StatusCode = HttpStatusCode.BadRequest;
+                returnModel.Data = null;
+            }
+            else
+            {
+                returnModel.StatusCode = response.StatusCode;
+                if (returnModel.StatusCode == HttpStatusCode.OK)
+                    returnModel.Data = JsonConvert.DeserializeObject<GetExerciseInfoModel>(response.Content.ReadAsStringAsync().Result);
+            }
+
+            return returnModel;
         }
 
-        public async Task<GetExercisesInfoModel> GetExercisesInfoAsync()
+        public async Task<CallsReturnModel<GetExercisesInfoModel>> GetExercisesInfoAsync()
         {
+            CallsReturnModel<GetExercisesInfoModel> returnModel = new();
             string serviceUrl = "api/Exercises/GetExercisesInfo?";
 
             var parameters = new FormUrlEncodedContent(new Dictionary<string, string> { });
 
-            string response = await ConnectionHelper.ContactWebServiceGetAsync(serviceUrl, parameters.ReadAsStringAsync().Result);
+            HttpResponseMessage response = await ConnectionHelper.ContactWebServiceGetAsync(serviceUrl, parameters.ReadAsStringAsync().Result);
 
-            return JsonConvert.DeserializeObject<GetExercisesInfoModel>(response);
+            if (response == null)
+            {
+                returnModel.StatusCode = HttpStatusCode.BadRequest;
+                returnModel.Data = null;
+            }
+            else
+            {
+                returnModel.StatusCode = response.StatusCode;
+                if (returnModel.StatusCode == HttpStatusCode.OK)
+                    returnModel.Data = JsonConvert.DeserializeObject<GetExercisesInfoModel>(response.Content.ReadAsStringAsync().Result);
+            }
+
+            return returnModel;
         }
 
-        public async Task<BooleanModel> CreateExerciseAsync(string name, int bodyPartId, string description)
+        public async Task<CallsReturnModel<bool>> CreateExerciseAsync(string name, int bodyPartId, string description)
         {
+            CallsReturnModel<bool> returnModel = new();
             string serviceUrl = "api/Exercises/CreateExercise?";
 
-            var parameters = new FormUrlEncodedContent(new Dictionary<string, string>
+            CreateExerciseModel createExerciseModel = new CreateExerciseModel()
             {
-                {"name", name },
-                {"bodyPartId", bodyPartId.ToString() },
-                {"description", description }
-            });
+                Name = name,
+                BodyPartId = bodyPartId,
+                Description = description
+            };
 
-            string response = await ConnectionHelper.ContactWebServicePostAsync(serviceUrl, parameters.ReadAsStringAsync().Result);
+            var json = JsonConvert.SerializeObject(createExerciseModel);
+            var data = new StringContent(json, Encoding.UTF8, "application/json");
+            HttpResponseMessage response = await ConnectionHelper.ContactWebServicePostAsync(serviceUrl, data);
 
-            return JsonConvert.DeserializeObject<BooleanModel>(response);
+            if (response == null)
+            {
+                returnModel.StatusCode = HttpStatusCode.BadRequest;
+                returnModel.Data = false;
+            }
+            else
+            {
+                returnModel.StatusCode = response.StatusCode;
+                if (returnModel.StatusCode == HttpStatusCode.OK)
+                    returnModel.Data = true;
+            }
+
+            return returnModel;
         }
 
-        public async Task<BooleanModel> DeleteExerciseAsync(int exerciseId)
+        public async Task<CallsReturnModel<bool>> DeleteExerciseAsync(int exerciseId)
         {
+            CallsReturnModel<bool> returnModel = new();
             string serviceUrl = "api/Exercises/DeleteExercise?";
 
             var parameters = new FormUrlEncodedContent(new Dictionary<string, string>
+                {
+                    {"exerciseId", exerciseId.ToString() }
+                });
+
+            HttpResponseMessage response = await ConnectionHelper.ContactWebServiceDeleteAsync(serviceUrl, parameters.ReadAsStringAsync().Result);
+
+            if (response == null)
             {
-                {"exerciseId", exerciseId.ToString() }
-            });
+                returnModel.StatusCode = HttpStatusCode.BadRequest;
+                returnModel.Data = false;
+            }
+            else
+            {
+                returnModel.StatusCode = response.StatusCode;
+                if (returnModel.StatusCode == HttpStatusCode.OK)
+                    returnModel.Data = true;
+            }
 
-            string response = await ConnectionHelper.ContactWebServiceDeleteAsync(serviceUrl, parameters.ReadAsStringAsync().Result);
-
-            return JsonConvert.DeserializeObject<BooleanModel>(response);
+            return returnModel;
         }
 
-        public async Task<BooleanModel> UpdateExerciseAsync(int exerciseId, string newExerciseName, int newBodyPartId, string newDescription)
+        public async Task<CallsReturnModel<bool>> UpdateExerciseAsync(int exerciseId, string name, int bodyPartId, string description)
         {
+            CallsReturnModel<bool> returnModel = new();
             string serviceUrl = "api/Exercises/UpdateExercise?";
 
-            var parameters = new FormUrlEncodedContent(new Dictionary<string, string>
+            UpdateExerciseModel updateExerciseModel = new UpdateExerciseModel()
             {
-                {"exerciseId", exerciseId.ToString() },
-                {"newExerciseName", newExerciseName },
-                {"newBodyPartId", newBodyPartId.ToString() },
-                {"newDescription", newDescription }
-            });
+                Id = exerciseId,
+                Name = name,
+                Description = description,
+                BodyPartId = bodyPartId
+            };
+            var json = JsonConvert.SerializeObject(updateExerciseModel);
+            var data = new StringContent(json, Encoding.UTF8, "application/json");
+            HttpResponseMessage response = await ConnectionHelper.ContactWebServicePostAsync(serviceUrl, data);
 
-            string response = await ConnectionHelper.ContactWebServicePostAsync(serviceUrl, parameters.ReadAsStringAsync().Result);
+            if (response == null)
+            {
+                returnModel.StatusCode = HttpStatusCode.BadRequest;
+                returnModel.Data = false;
+            }
+            else
+            {
+                returnModel.StatusCode = response.StatusCode;
+                if (returnModel.StatusCode == HttpStatusCode.OK)
+                    returnModel.Data = true;
+            }
 
-            return JsonConvert.DeserializeObject<BooleanModel>(response);
+            return returnModel;
         }
     }
 }
